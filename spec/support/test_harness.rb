@@ -10,6 +10,24 @@
 module Oedipus
   # Mixed into RSpec suites to manage starting/stopping Sphinx.
   module TestHarness
+    # Set the path to the searchd executable.
+    #
+    # The version of Sphinx must be >= 2.0.2.
+    #
+    # @param [String] path
+    #   the absolute path to searchd
+    def set_searchd(path)
+      @searchd = path
+    end
+
+    # Set the path to a temporary directory for writing test data to.
+    #
+    # @param [String] path
+    #   the path to a writable directory whose contents may be completely deleted
+    def set_data_dir(path)
+      @data_dir = path
+    end
+
     # Ensure that the temporary data directories exist and are clean.
     def prepare_data_dirs
       Dir.mkdir("#{data_dir}/index")  unless Dir.exist?("#{data_dir}/index")
@@ -98,7 +116,7 @@ module Oedipus
     end
 
     def searchd
-      ENV.fetch("SEARCHD", "searchd")
+      @searchd ||= "searchd"
     end
 
     def searchd_config
@@ -109,10 +127,6 @@ module Oedipus
       Dir["#{path}/**/*"].each do |f|
         File.delete(f) unless File.directory?(f)
       end
-    end
-
-    def set_data_dir(path)
-      @data_dir = path
     end
 
     def data_dir
