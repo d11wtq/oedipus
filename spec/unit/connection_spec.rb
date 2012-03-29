@@ -20,7 +20,7 @@ describe Oedipus::Connection do
     end
 
     context "on failed connection" do
-      it "raises an error of some description" do
+      it "raises an error" do
         expect {
           Oedipus::Connection.new(:host => "127.0.0.1", :port => 45346138)
         }.to raise_error

@@ -8,6 +8,7 @@
 ##
 
 require "oedipus/version"
+require "oedipus/query_builder"
 require "oedipus/connection"
 require "oedipus/index"
 require "oedipus/mysql/client"
