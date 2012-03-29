@@ -9,6 +9,8 @@
 
 require "oedipus/version"
 require "oedipus/connection"
+require "oedipus/index"
+require "oedipus/mysql/client"
 
 module Oedipus
   class << self

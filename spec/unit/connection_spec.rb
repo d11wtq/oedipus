@@ -10,7 +10,27 @@
 require "spec_helper"
 
 describe Oedipus::Connection do
-  it "exists" do
-    Oedipus::Connection.should be_a_kind_of(Class)
+  let(:conn) { Oedipus::Connection.new(searchd_host) }
+
+  describe "#initialize" do
+    context "on successful connection" do
+      it "returns the connection" do
+        Oedipus::Connection.new(searchd_host).should be_a_kind_of(Oedipus::Connection)
+      end
+    end
+
+    context "on failed connection" do
+      it "raises an error of some description" do
+        expect {
+          Oedipus::Connection.new(:host => "127.0.0.1", :port => 45346138)
+        }.to raise_error
+      end
+    end
+  end
+
+  describe "#[]" do
+    it "returns an index" do
+      conn[:posts_rt].should be_a_kind_of(Oedipus::Index)
+    end
   end
 end

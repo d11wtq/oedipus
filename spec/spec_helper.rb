@@ -20,9 +20,7 @@ RSpec.configure do |config|
     unless ENV.key?("SEARCHD")
       raise "You must specify a path to the Sphinx 'searchd' executable (>= 2.0.2)"
     end
-  end
 
-  config.before(:each) do
     set_data_dir File.expand_path("../data", __FILE__)
     set_searchd  ENV["SEARCHD"]
 
@@ -31,7 +29,11 @@ RSpec.configure do |config|
     start_searchd
   end
 
-  config.after(:each) do
+  config.before(:each) do
+    empty_indexes
+  end
+
+  config.after(:suite) do
     stop_searchd
   end
 end
