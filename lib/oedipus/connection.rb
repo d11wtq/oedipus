@@ -22,7 +22,7 @@ module Oedipus
     #
     # The connection will be established on initialization.
     def initialize(options)
-      @conn = ::Mysql.new(options[:host], nil, nil, nil, options[:port])
+      @conn = ::Mysql.new(options[:host], nil, nil, nil, options[:port], nil, ::Mysql::CLIENT_MULTI_STATEMENTS | ::Mysql::CLIENT_MULTI_RESULTS)
     end
 
     # Acess a specific index for querying.
