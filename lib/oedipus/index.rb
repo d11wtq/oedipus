@@ -43,43 +43,111 @@ module Oedipus
     def insert(id, hash)
       data = Hash[
         [:id, *hash.keys.map(&:to_sym)].zip \
-        [id,  *hash.values.map { |v| String === v ? @conn.quote(v) : v }]
+        [id,  *hash.values.map { |v| @conn.quote(v) }]
       ]
       @conn.execute("INSERT INTO #{name} (#{data.keys.join(', ')}) VALUES (#{data.values.join(', ')})")
       attributes.merge(data.select { |k, _| attributes.key?(k) })
     end
 
+    # Perform a search on the index.
+    #
+    # Either one or two arguments may be passed, with either one being mutually
+    # optional.
+    #
+    # @example Fulltext search
+    #   index.search("cats AND dogs")
+    #
+    # @example Fulltext search with attribute filters
+    #   index.search("cats AND dogs", author_id: 57)
+    #
+    # @example Attribute search only
+    #   index.search(author_id: 57)
+    #
+    # @param [String] query
+    #   a fulltext query
+    #
+    # @param [Hash] filters
+    #   attribute filters, limits, sorting and other options
+    #
+    # @return [Hash]
+    #   a Hash containing meta data, with the records in :records
     def search(*args)
-      raise ArgumentError, "Wrong number of arguments (#{args.size} for 1..2)" unless (1..2) === args.size
+      multi_search(main: args)[:main]
+    end
 
-      query, attrs = case args.first
-        when String then [args[0], args[1] || {}]
-        when Hash   then ["", args[0]]
-        else raise ArgumentError, "Invalid argument type #{args.first.class} for argument 0"
+    # Perform a a batch search on the index.
+    #
+    # A Hash of queries is passed, whose keys are used to collate the results in
+    # the return value.
+    #
+    # Each query may either by a string (fulltext search), a Hash (attribute search)
+    # or an array containing both.  In other words, the same arguments accepted by
+    # the #search method.
+    #
+    # @example
+    #   index.multi_search(
+    #     cat_results: ["cats", { author_id: 57 }],
+    #     dog_results: ["dogs", { author_id: 57 }]
+    #   )
+    #
+    # @param [Hash] queries
+    #   a hash whose keys map to queries
+    #
+    # @return [Hash]
+    #   a Hash whose keys map 1:1 with the input Hash, each element containing the
+    #   same results as those returned by the #search method.
+    def multi_search(queries)
+      unless queries.kind_of?(Hash)
+        raise ArgumentError, "Argument must be a Hash of named queries (#{queries.class} given)"
       end
 
-      results = @conn.execute(@builder.sql(query, attrs))
-      meta    = @conn.execute("SHOW META")
+      rs = @conn.query(
+        queries.map { |key, args|
+          [@builder.sql(*extract_query_data(*args)), "SHOW META"]
+        }.flatten.join(";\n")
+      )
 
-      # FIXME: This needs optimizing
-      {}.tap do |r|
-        meta.each do |k, v|
-          r[k.to_sym] = case k
-            when 'total', 'total_found' then Integer(v)
-            when 'time'                 then Float(v)
-            else v
+      {}.tap do |result|
+        queries.keys.each do |key|
+          records, meta = rs.shift, rs.shift
+          result[key] = meta_to_hash(meta).tap do |r|
+            r[:records] = records.map { |hash|
+              hash.inject({}) { |o, (k, v)| o.merge!(k.to_sym => cast(k, v)) }
+            }
           end
-        end
-
-        r[:records] = []
-
-        results.each_hash do |hash|
-          r[:records] << Hash[hash.keys.map(&:to_sym).zip(hash.map { |k, v| cast(k, v) })]
         end
       end
     end
 
     private
+
+    def meta_to_hash(meta)
+      {}.tap do |hash|
+        meta.each do |m|
+          n, v = m.values
+          case n
+          when "total_found", "total" then hash[n.to_sym] = v.to_i
+          when "time"                 then hash[:time] = v.to_f
+          when /\Adocs\[\d+\]\Z/      then (hash[:docs] ||= []).tap { |a| a << v.to_i }
+          when /\Ahits\[\d+\]\Z/      then (hash[:hits] ||= []).tap { |a| a << v.to_i }
+          when /\Akeyword\[\d+\]\Z/   then (hash[:keywords] ||= []).tap { |a| a << v }
+          else hash[n.to_sym] = v
+          end
+        end
+      end
+    end
+
+    def extract_query_data(*args)
+      unless (1..2) === args.size
+        raise ArgumentError, "Wrong number of arguments (#{args.size} for 1..2)"
+      end
+
+      case args[0]
+      when String then [args[0], args.fetch(1, {})]
+      when Hash   then ["", args[0]]
+      else raise ArgumentError, "Invalid argument type #{args.first.class} for argument 0"
+      end
+    end
 
     def cast(key, value)
       case attributes[key.to_sym]
@@ -89,6 +157,7 @@ module Oedipus
     end
 
     def reflect_attributes
+      # FIXME: Use #query instead of #execute
       rs = @conn.execute("DESC #{name}")
       {}.tap do |attrs|
         rs.each_hash do |row|

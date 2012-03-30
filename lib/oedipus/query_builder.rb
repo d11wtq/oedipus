@@ -8,12 +8,30 @@
 ##
 
 module Oedipus
+  # Constructs SphinxQL queries from the internal Hash format.
   class QueryBuilder
+    # Initialize a new QueryBuilder for +index_name+.
+    #
+    # @param [Symbol] index_name
+    #   the name of the index being queried
+    #
+    # @param [Connection] conn
+    #   the Oedipus connection
     def initialize(index_name, conn)
       @index_name = index_name
       @conn       = conn
     end
 
+    # Build a SphinxQL query for the fulltext search +query+ and filters in +filters+.
+    #
+    # @param [String] query
+    #   the fulltext query to execute (may be empty)
+    #
+    # @param [Hash] filters
+    #   additional attribute filters and other options
+    #
+    # @return [String]
+    #   a SphinxQL query
     def sql(query, filters)
       [
         from,

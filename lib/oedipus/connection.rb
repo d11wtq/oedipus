@@ -22,7 +22,14 @@ module Oedipus
     #
     # The connection will be established on initialization.
     def initialize(options)
-      @conn = ::Mysql.new(options[:host], nil, nil, nil, options[:port], nil, ::Mysql::CLIENT_MULTI_STATEMENTS | ::Mysql::CLIENT_MULTI_RESULTS)
+      @conn = ::Mysql.new(
+        options[:host],
+        nil, nil, nil,
+        options[:port],
+        nil,
+        ::Mysql::CLIENT_MULTI_STATEMENTS | ::Mysql::CLIENT_MULTI_RESULTS
+      )
+      @conn.set_server_option(::Mysql::OPTION_MULTI_STATEMENTS_ON)
     end
 
     # Acess a specific index for querying.
@@ -36,6 +43,33 @@ module Oedipus
       Index.new(index_name, self)
     end
 
+    # Execute one or more queries in a batch.
+    #
+    # Queries should be separated by semicolons.
+    # Results are returned in a 2-dimensional array.
+    #
+    # @param [String] sql
+    #   one or more SphinxQL statements, separated by semicolons
+    #
+    # @return [Array]
+    #   an array of arrays, containing the returned records
+    def query(sql)
+      rs = @conn.query(sql)
+      [].tap do |rows|
+        begin
+          rows << [].tap { |set|
+            rs.each_hash do |hash|
+              set << hash
+            end
+          }
+        end while @conn.next_result && rs = @conn.store_result
+      end
+    end
+
+    # Execute a non-read query.
+    #
+    # @param [String] sql
+    #   a SphinxQL query, such as INSERT or REPLACE
     def execute(sql)
       @conn.query(sql)
     end
