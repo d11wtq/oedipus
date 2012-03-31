@@ -112,7 +112,7 @@ module Oedipus
           records, meta = rs.shift, rs.shift
           result[key] = meta_to_hash(meta).tap do |r|
             r[:records] = records.map { |hash|
-              hash.inject({}) { |o, (k, v)| o.merge!(k.to_sym => cast(k, v)) }
+              hash.inject({}) { |o, (k, v)| o.merge!(k.to_sym => v) }
             }
           end
         end
@@ -146,13 +146,6 @@ module Oedipus
       when String then [args[0], args.fetch(1, {})]
       when Hash   then ["", args[0]]
       else raise ArgumentError, "Invalid argument type #{args.first.class} for argument 0"
-      end
-    end
-
-    def cast(key, value)
-      case attributes[key.to_sym]
-      when Fixnum then Integer(value)
-      else value
       end
     end
 
