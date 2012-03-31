@@ -79,6 +79,18 @@ describe Oedipus::QueryBuilder do
       end
     end
 
+    context "with an attributed filtered by collection" do
+      it "uses the IN operator" do
+        builder.select("cats", author_id: [7, 11]).should =~ /SELECT .* FROM posts WHERE .* author_id IN \(7, 11\)/
+      end
+    end
+
+    context "with an attributed filtered by negated collection" do
+      it "uses the NOT IN operator" do
+        builder.select("cats", author_id: Oedipus.not([7, 11])).should =~ /SELECT .* FROM posts WHERE .* author_id NOT IN \(7, 11\)/
+      end
+    end
+
     context "with a limit" do
       it "applies a LIMIT with an offset of 0" do
         builder.select("dogs", limit: 50).should =~ /SELECT .* FROM posts WHERE .* LIMIT 0, 50/

@@ -27,6 +27,7 @@ module Oedipus
       # @param [Comparison]
       #   a comparison suitable for comparing the input
       def of(v)
+        require 'set'
         case v
         when Comparison
           v
@@ -38,6 +39,8 @@ module Oedipus
           else
             Between.new(v)
           end
+        when Enumerable
+          In.new(v.to_a.flatten)
         else
           Equal.new(v)
         end

@@ -74,6 +74,28 @@ module Oedipus
         Outside.new(v)
       end
 
+      # Return the Comparison for any value in the set +v+.
+      #
+      # @param [Object] v
+      #   any ruby object to compare
+      #
+      # @return [Comparison::In]
+      #   the IN comparison for the values in v
+      def in(*v)
+        In.new(v.flatten)
+      end
+
+      # Return the Comparison for any value NOT in the set +v+.
+      #
+      # @param [Object] v
+      #   any ruby object to compare
+      #
+      # @return [Comparison::NotIn]
+      #   the NOT IN comparison for the values in v
+      def not_in(*v)
+        NotIn.new(v.flatten)
+      end
+
       # Return the Comparison for >= +v+.
       #
       # @param [Object] v
