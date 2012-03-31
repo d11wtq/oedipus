@@ -39,7 +39,7 @@ module Oedipus
     #
     # @example
     #   c = Oedipus.connect("localhost:9306")
-    #   c = Oedipus.connect(:host => "localhost", :port => 9306)
+    #   c = Oedipus.connect(host: "localhost", port: 9306)
     #
     # @param [String] server
     #   a 'hostname:port' string

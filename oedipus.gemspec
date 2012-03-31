@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.email       = ["chris@w3style.co.uk"]
   s.homepage    = "https://github.com/d11wtq/oedipus"
   s.summary     = "Sphinx 2 Search Client for Ruby"
-  s.description = <<-DESC.strip
+  s.description = <<-DESC.gsub(/^ {4}/m, "")
     Oedipus brings full support for Sphinx 2 to Ruby:
 
       * real-time indexes
