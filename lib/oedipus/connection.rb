@@ -7,11 +7,55 @@
 # See LICENSE file for details.
 ##
 
-require "mysql"
-
 module Oedipus
   # Provides an interface for talking to SphinxQL.
+  #
+  # Currently this class wraps a native mysql extension.
   class Connection
+    class << self
+      # Quote a value (of any type) for use in SphinxQL.
+      #
+      # @param [Object] v
+      #   the value to quote
+      #
+      # @return [Object]
+      #   the safe value
+      #
+      # Note that single quotes are added to strings.
+      def quote(v)
+        require "bigdecimal"
+        case v
+        when BigDecimal, Rational, Complex
+          v.to_f
+        when Numeric
+          v
+        when NilClass
+          "NULL"
+        else
+          "'#{escape_str(v.to_s)}'"
+        end
+      end
+
+      # Escape a string, without adding enclosing quotes.
+      #
+      # @param [String] str
+      #   the unsafe input string
+      #
+      # @return [String]
+      #   a safe string for use in SphinxQL
+      def escape_str(str)
+        str.gsub(/[\0\n\r\\\'\"\x1a]/) do |s|
+          case s
+          when "\0"   then "\\0"
+          when "\n"   then "\\n"
+          when "\r"   then "\\r"
+          when "\x1a" then "\\Z"
+          else "\\#{s}"
+          end
+        end
+      end
+    end
+
     # Instantiate a new Connection to a SphinxQL host.
     #
     # @param [Hash]
@@ -43,6 +87,8 @@ module Oedipus
     #
     # @return [Array]
     #   an array of arrays, containing the returned records
+    #
+    # Note that SphinxQL does not support prepared statements.
     def multi_query(sql)
       @conn.query(sql)
     end
@@ -54,6 +100,8 @@ module Oedipus
     #
     # @return [Array]
     #   an array of Hashes containing the matched records
+    #
+    # Note that SphinxQL does not support prepared statements.
     def query(sql)
       @conn.query(sql).first
     end
@@ -65,15 +113,10 @@ module Oedipus
     #
     # @return [Fixnum]
     #   the number of affected rows
+    #
+    # Note that SphinxQL does not support prepared statements.
     def execute(sql)
       @conn.execute(sql)
-    end
-
-    def quote(v)
-      case v
-      when Numeric then v
-      else "'#{::Mysql.quote(v.to_s)}'"
-      end
     end
   end
 end

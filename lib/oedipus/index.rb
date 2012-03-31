@@ -24,7 +24,7 @@ module Oedipus
       @name       = name.to_sym
       @conn       = conn
       @attributes = reflect_attributes
-      @builder    = QueryBuilder.new(name, conn)
+      @builder    = QueryBuilder.new(name)
     end
 
     # Insert the record with the ID +id+.
@@ -43,7 +43,7 @@ module Oedipus
     def insert(id, hash)
       data = Hash[
         [:id, *hash.keys.map(&:to_sym)].zip \
-        [id,  *hash.values.map { |v| @conn.quote(v) }]
+        [id,  *hash.values.map { |v| Connection.quote(v) }]
       ]
       @conn.execute("INSERT INTO #{name} (#{data.keys.join(', ')}) VALUES (#{data.values.join(', ')})")
       attributes.merge(data.select { |k, _| attributes.key?(k) })

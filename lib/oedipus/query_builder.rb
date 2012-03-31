@@ -14,12 +14,8 @@ module Oedipus
     #
     # @param [Symbol] index_name
     #   the name of the index being queried
-    #
-    # @param [Connection] conn
-    #   the Oedipus connection
-    def initialize(index_name, conn)
+    def initialize(index_name)
       @index_name = index_name
-      @conn       = conn
     end
 
     # Build a SphinxQL query for the fulltext search +query+ and filters in +filters+.
@@ -48,7 +44,7 @@ module Oedipus
 
     def conditions(query, filters)
       exprs = []
-      exprs << "MATCH(#{@conn.quote(query)})" unless query.empty?
+      exprs << "MATCH(#{Connection.quote(query)})" unless query.empty?
       "WHERE " << exprs.join(" AND ") if exprs.any?
     end
 

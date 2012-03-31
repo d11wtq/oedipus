@@ -29,8 +29,6 @@ Gem::Specification.new do |s|
   s.extensions    = ["ext/oedipus/extconf.rb"]
   s.require_paths = ["lib"]
 
-  s.add_runtime_dependency "ruby-mysql"
-
   s.add_development_dependency "rspec"
   s.add_development_dependency "rake-compiler"
 end
