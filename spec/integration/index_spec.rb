@@ -13,6 +13,8 @@ describe Oedipus::Index do
   let(:conn)  { Oedipus::Connection.new(searchd_host) }
   let(:index) { Oedipus::Index.new(:posts_rt, conn) }
 
+  before(:each) { empty_indexes }
+
   describe "#insert" do
     context "with valid data" do
       it "returns the inserted attributes as a Hash" do

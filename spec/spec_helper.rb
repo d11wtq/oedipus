@@ -29,10 +29,6 @@ RSpec.configure do |config|
     start_searchd
   end
 
-  config.before(:each) do
-    empty_indexes
-  end
-
   config.after(:suite) do
     stop_searchd
   end

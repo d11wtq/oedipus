@@ -8,12 +8,30 @@
 ##
 
 require "oedipus/version"
+
 require "oedipus/oedipus"
+
+require "oedipus/comparison"
+require "oedipus/comparison/equal"
+require "oedipus/comparison/not_equal"
+require "oedipus/comparison/between"
+require "oedipus/comparison/outside"
+require "oedipus/comparison/gte"
+require "oedipus/comparison/gt"
+require "oedipus/comparison/lte"
+require "oedipus/comparison/lt"
+require "oedipus/comparison/not"
+require "oedipus/comparison/shortcuts"
+
 require "oedipus/query_builder"
+
 require "oedipus/connection"
+
 require "oedipus/index"
 
 module Oedipus
+  extend Comparison::Shortcuts
+
   class << self
     # Connect to Sphinx running SphinxQL.
     #

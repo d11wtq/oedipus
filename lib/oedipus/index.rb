@@ -103,7 +103,7 @@ module Oedipus
 
       rs = @conn.multi_query(
         queries.map { |key, args|
-          [@builder.sql(*extract_query_data(*args)), "SHOW META"]
+          [@builder.select(*extract_query_data(*args)), "SHOW META"]
         }.flatten.join(";\n")
       )
 

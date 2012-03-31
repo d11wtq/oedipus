@@ -28,7 +28,7 @@ module Oedipus
     #
     # @return [String]
     #   a SphinxQL query
-    def sql(query, filters)
+    def select(query, filters)
       [
         from,
         conditions(query, filters),
@@ -45,7 +45,14 @@ module Oedipus
     def conditions(query, filters)
       exprs = []
       exprs << "MATCH(#{Connection.quote(query)})" unless query.empty?
+      exprs += attribute_conditions(filters)
       "WHERE " << exprs.join(" AND ") if exprs.any?
+    end
+
+    def attribute_conditions(filters)
+      filters \
+        .reject { |k, v| [:limit, :offset, :order].include?(k.to_sym) } \
+        .map    { |k, v| "#{k} #{Comparison.of(v)}" }
     end
 
     def limits(filters)
