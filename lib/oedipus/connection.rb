@@ -9,9 +9,6 @@
 
 require "mysql"
 
-# SphinxQL greets with charset number 0
-Mysql::Charset::NUMBER_TO_CHARSET[0] = Mysql::Charset::COLLATION_TO_CHARSET["utf8_general_ci"]
-
 module Oedipus
   # Provides an interface for talking to SphinxQL.
   class Connection
@@ -22,14 +19,7 @@ module Oedipus
     #
     # The connection will be established on initialization.
     def initialize(options)
-      @conn = ::Mysql.new(
-        options[:host],
-        nil, nil, nil,
-        options[:port],
-        nil,
-        ::Mysql::CLIENT_MULTI_STATEMENTS | ::Mysql::CLIENT_MULTI_RESULTS
-      )
-      @conn.set_server_option(::Mysql::OPTION_MULTI_STATEMENTS_ON)
+      @conn = Oedipus::Mysql.new(options[:host], options[:port])
     end
 
     # Acess a specific index for querying.
@@ -54,16 +44,7 @@ module Oedipus
     # @return [Array]
     #   an array of arrays, containing the returned records
     def query(sql)
-      rs = @conn.query(sql)
-      [].tap do |rows|
-        begin
-          rows << [].tap { |set|
-            rs.each_hash do |hash|
-              set << hash
-            end
-          }
-        end while @conn.next_result && rs = @conn.store_result
-      end
+      @conn.query(sql)
     end
 
     # Execute a non-read query.
@@ -71,7 +52,7 @@ module Oedipus
     # @param [String] sql
     #   a SphinxQL query, such as INSERT or REPLACE
     def execute(sql)
-      @conn.query(sql)
+      @conn.execute(sql)
     end
 
     def quote(v)

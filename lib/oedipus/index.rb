@@ -157,10 +157,8 @@ module Oedipus
     end
 
     def reflect_attributes
-      # FIXME: Use #query instead of #execute
-      rs = @conn.execute("DESC #{name}")
       {}.tap do |attrs|
-        rs.each_hash do |row|
+        @conn.query("DESC #{name}").first.each do |row|
           case row['Type']
           when 'uint', 'integer' then attrs[row['Field'].to_sym] = 0
           when 'string'          then attrs[row['Field'].to_sym] = ""

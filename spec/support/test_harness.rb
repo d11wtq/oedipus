@@ -37,14 +37,10 @@ module Oedipus
     end
 
     def empty_indexes
-      require "mysql"
-      @conn ||= ::Mysql.new(searchd_host[:host], nil, nil, nil, searchd_host[:port])
+      @conn ||= Oedipus::Mysql.new(searchd_host[:host], searchd_host[:port])
 
-      idxs = @conn.query("SHOW TABLES")
-
-      while idx = idxs.fetch_hash
-        docs = @conn.query("SELECT id FROM #{idx['Index']}")
-        while hash = docs.fetch_hash
+      @conn.query("SHOW TABLES").first.each do |idx|
+        @conn.query("SELECT id FROM #{idx['Index']}").first.each do |hash|
           @conn.query("DELETE FROM #{idx['Index']} WHERE id = #{hash['id']}")
         end
       end

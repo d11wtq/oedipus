@@ -7,6 +7,10 @@
 # See LICENSE file for details.
 ##
 
+unless ENV.key?("SEARCHD")
+  raise "You must specify a path to the Sphinx 'searchd' executable (>= 2.0.2)"
+end
+
 require "rspec"
 require "bundler/setup"
 require "oedipus"
@@ -17,10 +21,6 @@ RSpec.configure do |config|
   include Oedipus::TestHarness
 
   config.before(:suite) do
-    unless ENV.key?("SEARCHD")
-      raise "You must specify a path to the Sphinx 'searchd' executable (>= 2.0.2)"
-    end
-
     set_data_dir File.expand_path("../data", __FILE__)
     set_searchd  ENV["SEARCHD"]
 

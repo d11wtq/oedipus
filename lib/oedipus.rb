@@ -8,10 +8,10 @@
 ##
 
 require "oedipus/version"
+require "oedipus/oedipus"
 require "oedipus/query_builder"
 require "oedipus/connection"
 require "oedipus/index"
-require "oedipus/mysql/client"
 
 module Oedipus
   class << self

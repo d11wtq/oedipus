@@ -6,3 +6,5 @@ spec/data/index/*
 spec/data/binlog/*
 spec/data/searchd.*
 spec/data/sphinx.*
+lib/oedipus/oedipus.so
+tmp/
