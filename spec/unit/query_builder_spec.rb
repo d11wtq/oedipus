@@ -111,4 +111,26 @@ describe Oedipus::QueryBuilder do
       end
     end
   end
+
+  describe "#insert" do
+    it "includes the ID and the attributes" do
+      builder.insert(3, title: "example", views: 9).should == "INSERT INTO posts (id, title, views) VALUES (3, 'example', 9)"
+    end
+  end
+
+  describe "#update" do
+    it "includes the ID in the WHERE clause" do
+      builder.update(3, title: "example", views: 9).should =~ /UPDATE posts SET .* WHERE id = 3/
+    end
+
+    it "includes the changed attributes" do
+      builder.update(3, title: "example", views: 9).should =~ /UPDATE posts SET title = 'example', views = 9/
+    end
+  end
+
+  describe "#replace" do
+    it "includes the ID and the attributes" do
+      builder.replace(3, title: "example", views: 9).should == "REPLACE INTO posts (id, title, views) VALUES (3, 'example', 9)"
+    end
+  end
 end
