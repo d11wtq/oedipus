@@ -165,6 +165,32 @@ describe Oedipus::Index do
       end
     end
 
+    context "by attribute filtering" do
+      it "indicates the number of records found" do
+        index.search(views: 40..90)[:total_found].should == 2
+      end
+
+      it "includes the matches records" do
+        index.search(views: 40..90)[:records].should == [
+          { id: 2, views: 87,   user_id: 0, status: "" },
+          { id: 3, views: 41,   user_id: 0, status: "" }
+        ]
+      end
+    end
+
+    context "by fulltext with attribute filtering" do
+      it "indicates the number of records found" do
+        index.search("badgers", views: Oedipus.gt(100))[:total_found].should == 2
+      end
+
+      it "includes the matches records" do
+        index.search("badgers", views: Oedipus.gt(100))[:records].should == [
+          { id: 1, views: 150,  user_id: 0, status: "" },
+          { id: 4, views: 3003, user_id: 0, status: "" }
+        ]
+      end
+    end
+
     context "with limits" do
       it "still indicates the number of records found" do
         index.search("badgers", limit: 2)[:total_found].should == 3
@@ -180,6 +206,16 @@ describe Oedipus::Index do
       it "can use an offset" do
         index.search("badgers", limit: 1, offset: 1)[:records].should == [
           { id: 3, views: 41,   user_id: 0, status: "" }
+        ]
+      end
+    end
+
+    context "with ordering" do
+      it "returns the results ordered accordingly" do
+        index.search("badgers", order: {views: :desc})[:records].should == [
+          { id: 4, views: 3003, user_id: 0, status: "" },
+          { id: 1, views: 150,  user_id: 0, status: "" },
+          { id: 3, views: 41,   user_id: 0, status: "" },
         ]
       end
     end
