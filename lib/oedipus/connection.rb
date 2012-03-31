@@ -43,14 +43,28 @@ module Oedipus
     #
     # @return [Array]
     #   an array of arrays, containing the returned records
-    def query(sql)
+    def multi_query(sql)
       @conn.query(sql)
+    end
+
+    # Execute a single read query.
+    #
+    # @param [String] sql
+    #   a single SphinxQL statement
+    #
+    # @return [Array]
+    #   an array of Hashes containing the matched records
+    def query(sql)
+      @conn.query(sql).first
     end
 
     # Execute a non-read query.
     #
     # @param [String] sql
     #   a SphinxQL query, such as INSERT or REPLACE
+    #
+    # @return [Fixnum]
+    #   the number of affected rows
     def execute(sql)
       @conn.execute(sql)
     end

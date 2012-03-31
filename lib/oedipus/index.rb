@@ -101,7 +101,7 @@ module Oedipus
         raise ArgumentError, "Argument must be a Hash of named queries (#{queries.class} given)"
       end
 
-      rs = @conn.query(
+      rs = @conn.multi_query(
         queries.map { |key, args|
           [@builder.sql(*extract_query_data(*args)), "SHOW META"]
         }.flatten.join(";\n")
@@ -151,7 +151,7 @@ module Oedipus
 
     def reflect_attributes
       {}.tap do |attrs|
-        @conn.query("DESC #{name}").first.each do |row|
+        @conn.query("DESC #{name}").each do |row|
           case row['Type']
           when 'uint', 'integer' then attrs[row['Field'].to_sym] = 0
           when 'string'          then attrs[row['Field'].to_sym] = ""
