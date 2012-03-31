@@ -11,7 +11,6 @@ module Oedipus
   # Representation of a search index for querying.
   class Index
     attr_reader :name
-    attr_reader :attributes
 
     # Initialize the index named +name+ on the connection +conn+.
     #
@@ -23,14 +22,13 @@ module Oedipus
     def initialize(name, conn)
       @name       = name.to_sym
       @conn       = conn
-      @attributes = reflect_attributes
       @builder    = QueryBuilder.new(name)
     end
 
     # Insert the record with the ID +id+.
     #
     # @example
-    #   index.insert(42, :title => "example", :views => 22)
+    #   index.insert(42, title: "example", views: 22)
     #
     # @param [Integer] id
     #   the unique ID of the document in the index
@@ -38,15 +36,57 @@ module Oedipus
     # @param [Hash] hash
     #   a symbol-keyed hash of data to insert
     #
-    # @return [Hash]
-    #   a copy of the inserted record
+    # @return [Fixnum]
+    #   the number of rows inserted (currently always 1)
     def insert(id, hash)
-      data = Hash[
-        [:id, *hash.keys.map(&:to_sym)].zip \
-        [id,  *hash.values.map { |v| Connection.quote(v) }]
-      ]
-      @conn.execute("INSERT INTO #{name} (#{data.keys.join(', ')}) VALUES (#{data.values.join(', ')})")
-      attributes.merge(data.select { |k, _| attributes.key?(k) })
+      @conn.execute(@builder.insert(id, hash))
+    end
+
+    # Update the record with the ID +id+.
+    #
+    # @example
+    #   index.update(42, views: 25)
+    #
+    # @param [Integer] id
+    #   the unique ID of the document in the index
+    #
+    # @param [Hash] hash
+    #   a symbol-keyed hash of data to set
+    #
+    # @return [Fixnum]
+    #   the number of rows updated (1 or 0)
+    def update(id, hash)
+      @conn.execute(@builder.update(id, hash))
+    end
+
+    # Completely replace the record with the ID +id+.
+    #
+    # @example
+    #   index.replace(42, title: "New title", views: 25)
+    #
+    # @param [Integer] id
+    #   the unique ID of the document in the index
+    #
+    # @param [Hash] hash
+    #   a symbol-keyed hash of data to insert
+    #
+    # @return [Fixnum]
+    #   the number of rows inserted (currentl always 1)
+    def replace(id, hash)
+      @conn.execute(@builder.replace(id, hash))
+    end
+
+    # Fetch a single document by its ID.
+    #
+    # Returns the Hash of attributes if found, otherwise nil.
+    #
+    # @param [Fixnum] id
+    #   the ID of the document
+    #
+    # @return [Hash]
+    #   the attributes of the record
+    def fetch(id)
+      search(id: id)[:records].first
     end
 
     # Perform a search on the index.
@@ -72,7 +112,7 @@ module Oedipus
     # @return [Hash]
     #   a Hash containing meta data, with the records in :records
     def search(*args)
-      multi_search(main: args)[:main]
+      multi_search(_main_: args)[:_main_]
     end
 
     # Perform a a batch search on the index.
@@ -146,17 +186,6 @@ module Oedipus
       when String then [args[0], args.fetch(1, {})]
       when Hash   then ["", args[0]]
       else raise ArgumentError, "Invalid argument type #{args.first.class} for argument 0"
-      end
-    end
-
-    def reflect_attributes
-      {}.tap do |attrs|
-        @conn.query("DESC #{name}").each do |row|
-          case row['Type']
-          when 'uint', 'integer' then attrs[row['Field'].to_sym] = 0
-          when 'string'          then attrs[row['Field'].to_sym] = ""
-          end
-        end
       end
     end
   end

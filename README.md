@@ -55,23 +55,31 @@ sphinx = Oedipus.connect('localhost:9306') # sphinxql host
 ### Inserting
 
 ``` ruby
-record = sphinx[:articles].insert(
+sphinx[:articles].insert(
   7,
   title:     "Badgers in the wild",
   body:      "A big long wodge of text",
   author_id: 4,
   views:     102
 )
-# The attributes (but not the indexed fields) are returned
-# => { id: 7,  author_id: 4, views: 102 }
+```
+
+### Replacing
+
+``` ruby
+sphinx[:articles].replace(
+  7,
+  title:     "Badgers in the wild",
+  body:      "A big long wodge of text",
+  author_id: 4,
+  views:     102
+)
 ```
 
 ### Updating
 
 ``` ruby
-record = sphinx[:articles].update(7, views: 103)
-# The new attributes (but not the indexed fields) are returned
-# => { id: 7,  author_id: 4, views: 103 }
+sphinx[:articles].update(7, views: 103)
 ```
 
 ### Deleting

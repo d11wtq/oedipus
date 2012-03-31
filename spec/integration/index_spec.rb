@@ -17,14 +17,14 @@ describe Oedipus::Index do
 
   describe "#insert" do
     context "with valid data" do
-      it "returns the inserted attributes as a Hash" do
+      it "returns the number of rows inserted" do
         index.insert(
           10,
           title:   "Badgers",
           body:    "They live in setts, do badgers.",
           views:   721,
           user_id: 7
-        ).should == { id: 10, views: 721, user_id: 7, status: "" }
+        ).should == 1
       end
     end
 
@@ -38,6 +38,106 @@ describe Oedipus::Index do
             views:     721,
             user_id:   7
           )
+        }.to raise_error
+      end
+    end
+  end
+
+  describe "#fetch" do
+    before(:each) do
+      index.insert(1, title: "Badgers and foxes",       views: 150)
+      index.insert(2, title: "Rabbits and hares",       views: 73)
+      index.insert(3, title: "Clowns and cannon girls", views: 1)
+    end
+
+    context "with a valid document ID" do
+      it "returns the matched document" do
+        index.fetch(2).should == { id: 2, views: 73,  user_id: 0, status: "" }
+      end
+    end
+
+    context "with a bad document ID" do
+      it "returns nil" do
+        index.fetch(7).should be_nil
+      end
+    end
+  end
+
+  describe "#update" do
+    before(:each) do
+      index.insert(1, title: "Badgers and foxes", views: 150, user_id: 7)
+    end
+
+    context "with valid data" do
+      it "returns the number of rows modified" do
+        index.update(1, views: 721).should == 1
+      end
+
+      it "modifies the data" do
+        index.update(1, views: 721)
+        index.fetch(1).should == { id: 1, views: 721, user_id: 7, status: "" }
+      end
+    end
+
+    context "with unmatched data" do
+      it "returns 0" do
+        index.update(
+          3,
+          views:   721
+        ).should == 0
+      end
+    end
+
+    context "with invalid data" do
+      it "raises an error" do
+        expect {
+          index.insert(
+            1,
+            bad_field: "Invalid",
+            views:     721
+          )
+        }.to raise_error
+      end
+    end
+  end
+
+  describe "#replace" do
+    before(:each) do
+      index.insert(
+        1,
+        title:   "Badgers",
+        body:    "They live in setts, do badgers.",
+        views:   721,
+        user_id: 7
+      )
+    end
+
+    context "with valid existing data" do
+      it "returns the number of rows inserted" do
+        index.replace(1, title: "Badgers and foxes", views: 150).should == 1
+      end
+
+      it "entirely replaces the record" do
+        index.replace(1, title: "Badgers and foxes", views: 150)
+        index.fetch(1).should == { id: 1, views: 150, user_id: 0, status: "" }
+      end
+    end
+
+    context "with valid new data" do
+      it "returns the number of rows inserted" do
+        index.replace(2, title: "Beer and wine", views: 15).should == 1
+      end
+
+      it "entirely replaces the record" do
+        index.replace(2, title: "Beer and wine", views: 15)
+        index.fetch(2).should == { id: 2, views: 15, user_id: 0, status: "" }
+      end
+    end
+
+    context "with invalid data" do
+      it "raises an error" do
+        expect {
+          index.replace(1, bad_field: "Badgers and foxes", views: 150)
         }.to raise_error
       end
     end
