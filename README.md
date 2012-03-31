@@ -200,7 +200,7 @@ results = sphinx[:articles].facted_search(
   facets: {
     popular:         { views: 100..10000 },
     farming:         "farming",
-    popular_farming: ["farming", { views: 100..10000 } ]
+    popular_farming: ["farming", views: 100..10000 ]
   }
 )
 # => {
@@ -236,9 +236,9 @@ You pass a Hash of named queries and get a Hash of named resultsets.
 
 ``` ruby
 results = sphinx[:articles].multi_search(
-  badgers: ["badgers", { limit: 30 }],
+  badgers: ["badgers", limit: 30],
   frogs:   "frogs AND wetlands",
-  rabbits: ["rabbits OR burrows", { view_count: 20..100 }]
+  rabbits: ["rabbits OR burrows", view_count: 20..100]
 )
 # => {
 #   badgers: {
