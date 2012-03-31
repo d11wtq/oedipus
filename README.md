@@ -21,6 +21,18 @@ to work on a project of their own choice.  This is my 'Triple Time' project.
 I anticipate another week or two of development before I can consider this project
 production-ready.
 
+## Dependencies
+
+  * ruby (>= 1.9)
+  * sphinx (>= 2.0.2)
+  * mysql.h / client development libraries (>= 5.0)
+
+The gem builds a small native extension for interfacing with mysql, as existing gems
+either did not support multi-queries, or were too flaky (i.e. ruby-mysql) and I was
+concerned about conflicts with any specific ORMs users may be using.  I will add
+a pure-ruby option in due course (it requires implementing a relatively small subset
+of the mysql 5.0 protocol).
+
 ## Usage
 
 Not all of the following features are currently implemented, but the interface
