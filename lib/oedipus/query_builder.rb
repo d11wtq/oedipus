@@ -32,6 +32,7 @@ module Oedipus
       [
         from,
         conditions(query, filters),
+        order_by(filters),
         limits(filters)
       ].join(" ")
     end
@@ -115,6 +116,15 @@ module Oedipus
       attributes \
         .map    { |k, v| "#{k} = #{Connection.quote(v)}" } \
         .join(", ")
+    end
+
+    def order_by(filters)
+      return unless filters.key?(:order)
+
+      [
+        "ORDER BY",
+        Array(filters[:order]).map { |k, dir| "#{k} #{dir ? dir.to_s.upcase : 'ASC'}" }.join(", ")
+      ].join(" ")
     end
 
     def limits(filters)

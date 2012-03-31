@@ -110,6 +110,20 @@ describe Oedipus::QueryBuilder do
         builder.select("dogs", limit: 50, offset: 200).should_not =~ /offset = 200/
       end
     end
+
+    context "with an order clause" do
+      it "applies an ORDER BY" do
+        builder.select("cats", order: {views: :desc}).should =~ /SELECT .* FROM posts WHERE .* ORDER BY views DESC/
+      end
+
+      it "defaults to ASC" do
+        builder.select("cats", order: :views).should =~ /SELECT .* FROM posts WHERE .* ORDER BY views ASC/
+      end
+
+      it "supports multiple orders" do
+        builder.select("cats", order: {views: :asc, author_id: :desc}).should =~ /SELECT .* FROM posts WHERE .* ORDER BY views ASC, author_id DESC/
+      end
+    end
   end
 
   describe "#insert" do
