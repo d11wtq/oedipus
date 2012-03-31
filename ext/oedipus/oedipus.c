@@ -7,38 +7,9 @@
  * See LICENSE file for details.
  */
 
-#include <ruby.h>
-#include <mysql.h>
+#include "oedipus.h"
 
-/*! Internal struct used to reference a mysql connection */
-typedef struct {
-  int   connected;
-  MYSQL * ptr;
-} OdpMysql;
-
-/*! Generic method to raise a connection error */
-static void odp_raise(VALUE self, const char *msg);
-
-/*! Free memory allocated to mysql */
-static void odp_free(OdpMysql *conn);
-
-/*! Allocate and initialize a new mysql client */
-static VALUE odp_new(VALUE klass, VALUE host, VALUE port);
-
-/*! Initialize a new mysql client */
-static VALUE odp_initialize(VALUE self, VALUE host, VALUE port);
-
-/*! Connect, or reconnect to mysql */
-static VALUE odp_open(VALUE self);
-
-/*! Disconnect from mysql */
-static VALUE odp_close(VALUE self);
-
-/*! Execute an SQL non-read query and return the number of rows affected */
-static VALUE odp_execute(VALUE self, VALUE sql);
-
-/*! Execute several SQL read queries and return the result sets  */
-static VALUE odp_query(VALUE self, VALUE sql);
+/* -- Public methods -- */
 
 static VALUE odp_new(VALUE klass, VALUE host, VALUE port) {
   OdpMysql * conn;
@@ -129,16 +100,17 @@ static VALUE odp_execute(VALUE self, VALUE sql) {
 }
 
 static VALUE odp_query(VALUE self, VALUE sql) {
-  OdpMysql    * conn;
-  MYSQL_RES   * rs;
-  int           status;
-  int           num_fields;
-  MYSQL_ROW     row;
-  MYSQL_FIELD * fields;
-  int           i;
-  VALUE         rows;
-  VALUE         hash;
-  VALUE         results;
+  OdpMysql      * conn;
+  MYSQL_RES     * rs;
+  int             status;
+  int             num_fields;
+  MYSQL_ROW       row;
+  MYSQL_FIELD   * fields;
+  unsigned long * lengths;
+  int             i;
+  VALUE           rows;
+  VALUE           hash;
+  VALUE           results;
 
   Check_Type(sql, T_STRING);
 
@@ -155,13 +127,15 @@ static VALUE odp_query(VALUE self, VALUE sql) {
       rb_ary_push(results, (rows = rb_ary_new()));
 
       num_fields = mysql_num_fields(rs);
-
       fields = mysql_fetch_fields(rs);
 
       while ((row = mysql_fetch_row(rs))) {
+        lengths = mysql_fetch_lengths(rs);
         rb_ary_push(rows, (hash = rb_hash_new()));
         for (i = 0; i < num_fields; ++i) {
-          rb_hash_aset(hash, rb_str_new2(fields[i].name), rb_str_new2(row[i]));
+          rb_hash_aset(hash,
+                       rb_str_new2(fields[i].name),
+                       odp_cast_value(fields[i], row[i], lengths[i]));
         }
       }
 
@@ -191,6 +165,54 @@ static void odp_free(OdpMysql *conn) {
     mysql_close(conn->ptr);
   }
   free(conn);
+}
+
+static VALUE odp_cast_value(MYSQL_FIELD f, char * v, unsigned long len) {
+  short  s;
+  int    i;
+  long   l;
+  double d;
+
+  // FIXME: Add the DATETIME, TIMESTAMP, TIME, DATE and YEAR conversions
+  switch (f.type) {
+    case MYSQL_TYPE_NULL:
+      return Qnil;
+
+    case MYSQL_TYPE_TINY:
+    case MYSQL_TYPE_SHORT:
+      sscanf(v, "%hd", &s);
+      return INT2NUM(s);
+
+    case MYSQL_TYPE_LONG:
+      sscanf(v, "%d", &i);
+      return INT2NUM(i);
+
+    case MYSQL_TYPE_INT24:
+    case MYSQL_TYPE_LONGLONG:
+      sscanf(v, "%ld", &l);
+      return INT2NUM(l);
+
+    case MYSQL_TYPE_DECIMAL:
+    case MYSQL_TYPE_NEWDECIMAL:
+      rb_require("bigdecimal");
+      return rb_funcall(rb_path2class("BigDecimal"),
+                        rb_intern("new"),
+                        1,
+                        rb_str_new(v, len));
+
+    case MYSQL_TYPE_DOUBLE:
+    case MYSQL_TYPE_FLOAT:
+      sscanf(v, "%lf", &d);
+      return DBL2NUM(d);
+
+    case MYSQL_TYPE_STRING:
+    case MYSQL_TYPE_VAR_STRING:
+    case MYSQL_TYPE_BLOB:
+    case MYSQL_TYPE_SET:
+    case MYSQL_TYPE_ENUM:
+    default:
+      return rb_str_new(v, len);
+  }
 }
 
 /* -- Extension initialization -- */
