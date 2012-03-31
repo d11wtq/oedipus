@@ -89,6 +89,13 @@ sphinx[:articles].delete(7)
 # => true
 ```
 
+### Fetching a known document (by ID)
+
+``` ruby
+record = sphinx[:articles].fetch(7)
+# => { id: 7, views: 984, author_id: 3 }
+```
+
 ### Fulltext searching
 
 ``` ruby
