@@ -81,21 +81,14 @@ describe Oedipus::Index do
 
     context "with unmatched data" do
       it "returns 0" do
-        index.update(
-          3,
-          views:   721
-        ).should == 0
+        index.update(3, views: 721).should == 0
       end
     end
 
     context "with invalid data" do
       it "raises an error" do
         expect {
-          index.insert(
-            1,
-            bad_field: "Invalid",
-            views:     721
-          )
+          index.update(1, bad_field: "Invalid", views: 721)
         }.to raise_error
       end
     end

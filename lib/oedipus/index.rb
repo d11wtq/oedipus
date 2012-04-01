@@ -115,6 +115,43 @@ module Oedipus
       multi_search(_main_: args)[:_main_]
     end
 
+    # Perform a faceted search on the index, using a base query and one or more facets.
+    #
+    # The base query is inherited by each facet, which may override (or refine) the
+    # query.
+    #
+    # The results returned include a :facets key, containing the results for each facet.
+    #
+    # @example
+    #   index.faceted_search(
+    #     "cats | dogs",
+    #     category_id: 7,
+    #     facets: {
+    #       popular: {views:        Oedipus.gt(150)},
+    #       recent:  {published_at: Oedipus.gt(Time.now.to_i - 7 * 86400)}
+    #     }
+    #   )
+    #
+    # @param [String] fulltext_query
+    #   a fulltext query to search on, optional
+    #
+    # @param [Hash] options
+    #   attribute filters and facets in a sub-hash
+    #
+    # @return [Hash]
+    #   a Hash whose top-level result set is for the main query and which
+    #   contains a :facets element with keys mapping 1:1 for all facets
+    def faceted_search(*args)
+      query, options = extract_query_data(args)
+      { facets: {} }.tap do |results|
+        multi_search(
+          { _main_: [query, options.reject { |k, _| k == :facets }] }.merge(options.fetch(:facets, {}))
+        ).each do |k, v|
+          k == :_main_ ? results.merge!(v) : results[:facets].merge!(k => v)
+        end
+      end
+    end
+
     # Perform a a batch search on the index.
     #
     # A Hash of queries is passed, whose keys are used to collate the results in

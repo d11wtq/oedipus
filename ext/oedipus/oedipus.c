@@ -227,5 +227,5 @@ void Init_oedipus(void) {
   rb_define_method(cMysql, "execute",    odp_execute,    1);
   rb_define_method(cMysql, "query",      odp_query,      1);
 
-  rb_define_singleton_method(cMysql, "new",      odp_new,      2);
+  rb_define_singleton_method(cMysql, "new",  odp_new, 2);
 }
