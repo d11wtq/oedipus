@@ -12,11 +12,10 @@ Gem::Specification.new do |s|
   s.description = <<-DESC.gsub(/^ {4}/m, "")
     Oedipus brings full support for Sphinx 2 to Ruby:
 
-      * real-time indexes
-      * faceted search
-      * multi-queries
-      * full attribute support
-      * optional model-style interaction
+      * real-time indexes (insert, replace, update, delete)
+      * faceted search (variations on a base query)
+      * multi-queries (multiple queries executed in a batch)
+      * full attribute filtering support
 
     It works with 'stable' versions of Sphinx 2 (>= 2.0.2). All
     features are implemented entirely through the SphinxQL interface.
