@@ -27,22 +27,21 @@ module Oedipus
       # @param [Comparison]
       #   a comparison suitable for comparing the input
       def of(v)
-        require 'set'
         case v
         when Comparison
           v
         when Range
-          if v.end == (1/0.0)
-            v.exclude_end? ? GT.new(v.first) : GTE.new(v.first)
-          elsif v.first == -(1/0.0)
-            v.exclude_end? ? LT.new(v.end) : LTE.new(v.end)
+          if v.end == Float::INFINITY
+            v.exclude_end? ? Shortcuts.gt(v.first) : Shortcuts.gte(v.first)
+          elsif v.first == -Float::INFINITY
+            v.exclude_end? ? Shortcuts.lt(v.end) : Shortcuts.lte(v.end)
           else
-            Between.new(v)
+            Shortcuts.between(v)
           end
         when Enumerable
-          In.new(v.to_a.flatten)
+          Shortcuts.in(v)
         else
-          Equal.new(v)
+          Shortcuts.eq(v)
         end
       end
     end
@@ -56,6 +55,19 @@ module Oedipus
     def initialize(v)
       @v = v
     end
+
+    # Compare two comparisons for equality.
+    #
+    # @param [Comparison] other
+    #   another comparison to check
+    #
+    # @return [Boolean]
+    #   true if the comparisons are the same
+    def ==(other)
+      other.class == self.class && other.v == v
+    end
+
+    alias_method :eql?, :==
 
     # Return the exact inverse of this comparison.
     #

@@ -11,6 +11,8 @@ module Oedipus
   class Comparison
     # Provides short methods for casting values to Comparisons.
     module Shortcuts
+      extend self
+
       # Return the Comparison for equality of +v+.
       #
       # @param [Object] v
@@ -55,8 +57,7 @@ module Oedipus
       # @return [Comparison::Between]
       #   an between comparison of a..b
       def between(a, b = nil)
-        v = a.kind_of?(Range) ? a : a..b
-        Between.new(v)
+        Between.new(a.kind_of?(Range) ? a : a..b)
       end
 
       # Return the Comparison to exclude the range a..b.
@@ -70,8 +71,7 @@ module Oedipus
       # @return [Comparison::Outside]
       #   an outside comparison of a..b
       def outside(a, b = nil)
-        v = a.kind_of?(Range) ? a : a..b
-        Outside.new(v)
+        Outside.new(a.kind_of?(Range) ? a : a..b)
       end
 
       # Return the Comparison for any value in the set +v+.
@@ -82,7 +82,7 @@ module Oedipus
       # @return [Comparison::In]
       #   the IN comparison for the values in v
       def in(*v)
-        In.new(v.flatten)
+        In.new(v.map { |el| el.respond_to?(:to_a) ? el.to_a : el }.flatten)
       end
 
       # Return the Comparison for any value NOT in the set +v+.
@@ -93,7 +93,7 @@ module Oedipus
       # @return [Comparison::NotIn]
       #   the NOT IN comparison for the values in v
       def not_in(*v)
-        NotIn.new(v.flatten)
+        NotIn.new(v.map { |el| el.respond_to?(:to_a) ? el.to_a : el }.flatten)
       end
 
       # Return the Comparison for >= +v+.
