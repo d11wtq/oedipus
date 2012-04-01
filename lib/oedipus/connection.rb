@@ -58,12 +58,18 @@ module Oedipus
 
     # Instantiate a new Connection to a SphinxQL host.
     #
-    # @param [Hash]
+    # @param [String] server
+    #   a 'hostname:port' string
+    #
+    # @param [Hash] options
     #   a Hash containing :host and :port
     #
     # The connection will be established on initialization.
     def initialize(options)
-      @conn = Oedipus::Mysql.new(options[:host], options[:port])
+      options = options.kind_of?(String) ?
+        Hash[ [:host, :port].zip(options.split(":")) ] :
+        options
+      @conn = Oedipus::Mysql.new(options[:host], options[:port].to_i)
     end
 
     # Acess a specific index for querying.

@@ -223,34 +223,47 @@ describe Oedipus::Index do
 
   describe "#multi_search" do
     before(:each) do
-      index.insert(1, title: "Badgers and foxes",   views: 150)
-      index.insert(2, title: "Rabbits and hares",   views: 87)
-      index.insert(3, title: "Badgers in the wild", views: 41)
-      index.insert(4, title: "Badgers for all!",    views: 3003)
+      index.insert(1, title: "Badgers and foxes",   views: 150,  user_id: 1)
+      index.insert(2, title: "Rabbits and hares",   views: 87,   user_id: 1)
+      index.insert(3, title: "Badgers in the wild", views: 41,   user_id: 2)
+      index.insert(4, title: "Badgers for all!",    views: 3003, user_id: 1)
     end
 
-    it "indicates the number of results for each query" do
-      results = index.multi_search(
-        badgers: "badgers",
-        rabbits: "rabbits"
-      )
-      results[:badgers][:total_found].should == 3
-      results[:rabbits][:total_found].should == 1
+    context "by fulltext querying" do
+      it "indicates the number of results for each query" do
+        results = index.multi_search(
+          badgers: "badgers",
+          rabbits: "rabbits"
+          )
+        results[:badgers][:total_found].should == 3
+        results[:rabbits][:total_found].should == 1
+      end
+
+      it "returns the records for each search" do
+        results = index.multi_search(
+          badgers: "badgers",
+          rabbits: "rabbits"
+          )
+        results[:badgers][:records].should == [
+          { id: 1, views: 150,  user_id: 1, status: "" },
+          { id: 3, views: 41,   user_id: 2, status: "" },
+          { id: 4, views: 3003, user_id: 1, status: "" }
+        ]
+        results[:rabbits][:records].should == [
+          { id: 2, views: 87, user_id: 1, status: "" }
+        ]
+      end
     end
 
-    it "returns the records for each search" do
-      results = index.multi_search(
-        badgers: "badgers",
-        rabbits: "rabbits"
-      )
-      results[:badgers][:records].should == [
-        { id: 1, views: 150,  user_id: 0, status: "" },
-        { id: 3, views: 41,   user_id: 0, status: "" },
-        { id: 4, views: 3003, user_id: 0, status: "" }
-      ]
-      results[:rabbits][:records].should == [
-        { id: 2, views: 87, user_id: 0, status: "" }
-      ]
+    context "by attribute filtering" do
+      it "indicates the number of results for each query" do
+        results = index.multi_search(
+          shiela: {user_id: 1},
+          barry:  {user_id: 2}
+          )
+        results[:shiela][:total_found].should == 3
+        results[:barry][:total_found].should == 1
+      end
     end
   end
 end

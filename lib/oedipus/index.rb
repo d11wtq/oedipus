@@ -143,7 +143,7 @@ module Oedipus
 
       rs = @conn.multi_query(
         queries.map { |key, args|
-          [@builder.select(*extract_query_data(*args)), "SHOW META"]
+          [@builder.select(*extract_query_data(args)), "SHOW META"]
         }.flatten.join(";\n")
       )
 
@@ -174,18 +174,25 @@ module Oedipus
           else hash[n.to_sym] = v
           end
         end
+
+        if hash.key?(:docs) && hash.key?(:hits) && hash.key?(:keywords)
+          hash[:docs] = Hash[ (hash[:keywords]).zip(hash[:docs]) ]
+          hash[:hits] = Hash[ (hash[:keywords]).zip(hash[:hits]) ]
+        end
       end
     end
 
-    def extract_query_data(*args)
+    def extract_query_data(args)
+      args = [args] unless Array === args
+
       unless (1..2) === args.size
-        raise ArgumentError, "Wrong number of arguments (#{args.size} for 1..2)"
+        raise ArgumentError, "Wrong number of query arguments (#{args.size} for 1..2)"
       end
 
       case args[0]
       when String then [args[0], args.fetch(1, {})]
-      when Hash   then ["", args[0]]
-      else raise ArgumentError, "Invalid argument type #{args.first.class} for argument 0"
+      when Hash   then ["",      args[0]          ]
+      else raise ArgumentError, "Invalid query argument type #{args.first.class}"
       end
     end
   end

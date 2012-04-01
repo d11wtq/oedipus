@@ -51,11 +51,7 @@ module Oedipus
     #   a client connected to SphinxQL
     def connect(options)
       # TODO: Add pooling
-      Connection.new(
-        options.kind_of?(String) ?
-          Hash[ [:host, :port].zip(options.split(":")) ] :
-          options
-      )
+      Connection.new(options)
     end
   end
 end
