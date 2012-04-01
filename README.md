@@ -131,7 +131,7 @@ sphinx[:articles].search(
 # less than or equal
 sphinx[:articles].search(
   "example",
-  views: -(1/0.0)..100
+  views: -Float::INFINITY..100
 )
 
 sphinx[:articles].search(
@@ -142,7 +142,7 @@ sphinx[:articles].search(
 # greater than
 sphinx[:articles].search(
   "example",
-  views: 100...(1/0.0)
+  views: 100...Float::INFINITY
 )
 
 sphinx[:articles].search(
@@ -278,6 +278,24 @@ sphinx[:articles].search("bobcats", limit: 50, offset: 150)
 ``` ruby
 sphinx[:articles].search("badgers", order: { views: :asc })
 ```
+
+### Running the specs
+
+There are both unit tests and integration tests in the specs/ directory.  By default they
+will both run, but in order for the integration specs to work, you need a locally
+installed copy of Sphinx.  You then execute the specs as follows:
+
+    SEARCHD=/path/to/bin/searchd bundle exec rake spec
+
+If you don't have Sphinx installed locally, you cannot run the integration specs (they need
+to write config files and start and stop sphinx internally).
+
+To run the unit tests alone, without the need for Sphinx:
+
+    bundle exec rake spec:unit
+
+If you have made changes to the C extension, those changes will be compiled and installed
+before the specs are run.
 
 ## Future Plans
 

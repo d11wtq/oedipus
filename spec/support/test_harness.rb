@@ -8,8 +8,33 @@
 ##
 
 module Oedipus
-  # Mixed into RSpec suites to manage starting/stopping Sphinx.
+  # Mixed into RSpec suites to manage starting/stopping Sphinx and writing indexes.
   module TestHarness
+    class << self
+      def included(base)
+        base.before(:all) do
+          unless ENV.key?("SEARCHD")
+            raise "You must specify a path to the Sphinx 'searchd' executable (>= 2.0.2)"
+          end
+
+          set_data_dir File.expand_path("../../data", __FILE__)
+          set_searchd  ENV["SEARCHD"]
+
+          prepare_data_dirs
+          write_sphinx_conf
+          start_searchd
+        end
+
+        base.before(:each) do
+          empty_indexes
+        end
+
+        base.after(:all) do
+          stop_searchd
+        end
+      end
+    end
+
     # Set the path to the searchd executable.
     #
     # The version of Sphinx must be >= 2.0.2.

@@ -10,6 +10,8 @@
 require "spec_helper"
 
 describe Oedipus::Connection do
+  include Oedipus::TestHarness
+
   let(:conn) { Oedipus::Connection.new(searchd_host) }
 
   describe "#initialize" do
