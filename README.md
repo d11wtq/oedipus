@@ -115,8 +115,8 @@ results = sphinx[:articles].search("badgers", limit: 2)
 # => {
 #   total_found: 987,
 #   time:        0.000,
-#   keyword[0]:  "badgers",
-#   docs[0]:     987,
+#   keywords:  [ "badgers" ],
+#   docs:      { "badgers" => 987 },
 #   records:     [
 #     { id: 7,  author_id: 4, views: 102 },
 #     { id: 11, author_id: 6, views: 23 }
