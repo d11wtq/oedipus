@@ -75,7 +75,7 @@ static VALUE odp_close(VALUE self) {
 
   Data_Get_Struct(self, OdpMysql, conn);
 
-  if (!(conn->connected)) {
+  if (!conn->connected) {
     return Qfalse;
   }
 
@@ -91,6 +91,10 @@ static VALUE odp_execute(VALUE self, VALUE sql) {
   Check_Type(sql, T_STRING);
 
   Data_Get_Struct(self, OdpMysql, conn);
+
+  if (!conn->connected) {
+    odp_raise(self, "Cannot execute query on a closed connection");
+  }
 
   if (mysql_query(conn->ptr, RSTRING_PTR(sql))) {
     odp_raise(self, "Failed to execute statement(s)");
@@ -115,6 +119,10 @@ static VALUE odp_query(VALUE self, VALUE sql) {
   Check_Type(sql, T_STRING);
 
   Data_Get_Struct(self, OdpMysql, conn);
+
+  if (!conn->connected) {
+    odp_raise(self, "Cannot execute query on a closed connection");
+  }
 
   if (mysql_query(conn->ptr, RSTRING_PTR(sql))) {
     odp_raise(self, "Failed to execute statement(s)");
@@ -156,7 +164,7 @@ static void odp_raise(VALUE self, const char *msg) {
   OdpMysql * conn;
 
   Data_Get_Struct(self, OdpMysql, conn);
-  rb_raise(rb_eRuntimeError,
+  rb_raise(rb_path2class("Oedipus::ConnectionError"),
            "%s. Error %u: %s", msg, mysql_errno(conn->ptr), mysql_error(conn->ptr));
 }
 

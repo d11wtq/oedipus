@@ -22,4 +22,5 @@ RSpec::Core::RakeTask.new('spec:integration') do |t|
 end
 
 Rake::Task['spec'].prerequisites << :compile
+Rake::Task['spec:unit'].prerequisites << :compile
 Rake::Task['spec:integration'].prerequisites << :compile

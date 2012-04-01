@@ -20,9 +20,9 @@ module Oedipus
     # @param [Connection] conn
     #   an instance of Oedipus::Connection for querying
     def initialize(name, conn)
-      @name       = name.to_sym
-      @conn       = conn
-      @builder    = QueryBuilder.new(name)
+      @name    = name.to_sym
+      @conn    = conn
+      @builder = QueryBuilder.new(name)
     end
 
     # Insert the record with the ID +id+.
@@ -143,10 +143,11 @@ module Oedipus
     #   contains a :facets element with keys mapping 1:1 for all facets
     def faceted_search(*args)
       query, options = extract_query_data(args)
+      main_query     = [query, options.reject { |k, _| k == :facets }]
+      facets         = merge_queries(main_query, options.fetch(:facets, {}))
+
       { facets: {} }.tap do |results|
-        multi_search(
-          { _main_: [query, options.reject { |k, _| k == :facets }] }.merge(options.fetch(:facets, {}))
-        ).each do |k, v|
+        multi_search({ _main_: main_query }.merge(facets)).each do |k, v|
           k == :_main_ ? results.merge!(v) : results[:facets].merge!(k => v)
         end
       end
@@ -184,7 +185,7 @@ module Oedipus
         }.flatten.join(";\n")
       )
 
-      {}.tap do |result|
+      Hash[].tap do |result|
         queries.keys.each do |key|
           records, meta = rs.shift, rs.shift
           result[key] = meta_to_hash(meta).tap do |r|
@@ -199,7 +200,7 @@ module Oedipus
     private
 
     def meta_to_hash(meta)
-      {}.tap do |hash|
+      Hash[].tap do |hash|
         meta.each do |m|
           n, v = m.values
           case n
@@ -213,13 +214,13 @@ module Oedipus
         end
 
         if hash.key?(:docs) && hash.key?(:hits) && hash.key?(:keywords)
-          hash[:docs] = Hash[ (hash[:keywords]).zip(hash[:docs]) ]
-          hash[:hits] = Hash[ (hash[:keywords]).zip(hash[:hits]) ]
+          hash[:docs] = Hash[(hash[:keywords]).zip(hash[:docs])]
+          hash[:hits] = Hash[(hash[:keywords]).zip(hash[:hits])]
         end
       end
     end
 
-    def extract_query_data(args)
+    def extract_query_data(args, default_query = "")
       args = [args] unless Array === args
 
       unless (1..2) === args.size
@@ -227,10 +228,19 @@ module Oedipus
       end
 
       case args[0]
-      when String then [args[0], args.fetch(1, {})]
-      when Hash   then ["",      args[0]          ]
+      when String then [args[0],       args.fetch(1, {})]
+      when Hash   then [default_query, args[0]          ]
       else raise ArgumentError, "Invalid query argument type #{args.first.class}"
       end
+    end
+
+    def merge_queries(base, others)
+      base_query, base_filters = base
+
+      Hash[others.map { |k, q|
+        query, filters = extract_query_data(q, base_query)
+        [k, [query.gsub("%{query}", base_query), base_filters.merge(filters)]]
+      }]
     end
   end
 end

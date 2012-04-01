@@ -26,7 +26,7 @@ describe Oedipus::Connection do
         it "raises an error" do
           expect {
             Oedipus::Connection.new("127.0.0.1:45346138")
-          }.to raise_error
+          }.to raise_error(Oedipus::ConnectionError)
         end
       end
     end
@@ -42,7 +42,7 @@ describe Oedipus::Connection do
         it "raises an error" do
           expect {
             Oedipus::Connection.new(:host => "127.0.0.1", :port => 45346138)
-          }.to raise_error
+          }.to raise_error(Oedipus::ConnectionError)
         end
       end
     end

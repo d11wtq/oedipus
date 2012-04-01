@@ -33,16 +33,15 @@ production-ready.
   * sphinx (>= 2.0.2)
   * mysql.h / client development libraries (>= 4.1)
 
-The gem builds a small native extension for interfacing with mysql, as existing gems
-either did not support multi-queries, or were too flaky (i.e. ruby-mysql) and I was
-concerned about conflicts with any specific ORMs users may be using.  I will add
-a pure-ruby option in due course (it requires implementing a relatively small subset
-of the mysql 4.1/5.0 protocol).
+The gem builds a small (tiny) native extension for interfacing with mysql, as
+existing gems either did not support multi-queries, or were too flaky
+(i.e. ruby-mysql). I was also concerned about potential conflicts with any
+specific ORMs users may be using.  I will add a pure-ruby option in due course
+(it requires implementing a relatively small subset of the mysql 4.1/5.0 protocol).
 
 ## Usage
 
-Not all of the following features are currently implemented, but the interface
-style is as follows.
+The following features are all currently implemented, but more are coming.
 
 ### Connecting to Sphinx
 
@@ -97,6 +96,15 @@ record = sphinx[:articles].fetch(7)
 ```
 
 ### Fulltext searching
+
+You perform queries by invoking `#search` on the index.
+
+Oedipus makes no attempt to provide an abstraction layer for the fulltext
+query itself.  I believe this would not be flexible enough.  Sphinx fulltext
+queries are extremely featureful, very dense and concise; a ruby solution
+would only be lengthier and harder to understand, IMHO.  Perhaps such an
+abstraction could be provided by a separate gem.
+
 
 ``` ruby
 results = sphinx[:articles].search("badgers", limit: 2)
@@ -197,17 +205,23 @@ A faceted search takes a base query and a set of additional queries that are
 variations on it.  Oedipus makes this simple by allowing your facets to inherit
 from the base query.
 
+Oedipus allows you to replace '%{query}' in your facets with whatever was in the
+original query.  This can be useful if you want to provide facets that only
+perform the search in the title of the document (`"@title (%{query})"`) for example.
+
 Each facet is given a name, which is used to reference them in the results.
 
-Sphinx optimizes the queries by figuring out what the common parts are.
+Sphinx optimizes the queries by figuring out what the common parts are.  Currently
+it does two optimizations, though in future this will likely improve further, so
+using this technique to do your faceted searches is a good idea.
 
 ``` ruby
 results = sphinx[:articles].facted_search(
   "badgers",
   facets: {
     popular:         { views: 100..10000 },
-    farming:         "farming",
-    popular_farming: ["farming", views: 100..10000 ]
+    also_farming:    "%{query} & farming",
+    popular_farming: ["%{query} & farming", views: 100..10000 ]
   }
 )
 # => {
@@ -220,7 +234,7 @@ results = sphinx[:articles].facted_search(
 #       time: 0.000,
 #       records: [ ... ]
 #     },
-#     farming: {
+#     also_farming: {
 #       total_found: 123,
 #       time: 0.000,
 #       records: [ ... ]
@@ -237,15 +251,15 @@ results = sphinx[:articles].facted_search(
 ### General purpose multi-search
 
 If you want to execute multiple queries in a batch that are not related to each
-other (which is a faceted search), then you can use `#multi_search`.
+other (which would be a faceted search), then you can use `#multi_search`.
 
 You pass a Hash of named queries and get a Hash of named resultsets.
 
 ``` ruby
 results = sphinx[:articles].multi_search(
   badgers: ["badgers", limit: 30],
-  frogs:   "frogs AND wetlands",
-  rabbits: ["rabbits OR burrows", view_count: 20..100]
+  frogs:   "frogs & wetlands",
+  rabbits: ["rabbits | burrows", view_count: 20..100]
 )
 # => {
 #   badgers: {
@@ -295,7 +309,7 @@ To run the unit tests alone, without the need for Sphinx:
     bundle exec rake spec:unit
 
 If you have made changes to the C extension, those changes will be compiled and installed
-before the specs are run.
+(to the lib/ directory) before the specs are run.
 
 You may also compile the C extension and run the specs separately, if you prefer:
 
@@ -314,12 +328,12 @@ You may also compile the C extension and run the specs separately, if you prefer
 
 ## Future Plans
 
-I plan to release gems for integration with DataMapper and ActiveRecord.  DataMapper
-first, since that's what we use.
-
-I also would like to implement the small subset of the MySQL protocol necessary for
-communication with SphinxQL, instead of forcing users to use a native extension (though
-still keep this as an option for those who have libmysql).
+  * Integration with DataMapper and ActiveRecord (DataMapper first)
+  * Distributed index support (sharding writes between indexes)
+  * Make C extension optional and provide an implementation in pure-ruby
+  * N-dimensional faceted search (facets inside of facets)
+  * Query translation layer for Google-style AND/OR/NOT interpretation
+  * Fulltext query sanitization for unsafe user input (e.g. @missing field)
 
 ## Copyright and Licensing
 
