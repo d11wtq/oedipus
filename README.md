@@ -279,7 +279,7 @@ sphinx[:articles].search("bobcats", limit: 50, offset: 150)
 sphinx[:articles].search("badgers", order: { views: :asc })
 ```
 
-### Running the specs
+## Running the specs
 
 There are both unit tests and integration tests in the specs/ directory.  By default they
 will both run, but in order for the integration specs to work, you need a locally
