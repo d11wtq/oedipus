@@ -283,7 +283,7 @@ sphinx[:articles].search("badgers", order: { views: :asc })
 
 There are both unit tests and integration tests in the specs/ directory.  By default they
 will both run, but in order for the integration specs to work, you need a locally
-installed copy of Sphinx.  You then execute the specs as follows:
+installed copy of Sphinx [1].  You then execute the specs as follows:
 
     SEARCHD=/path/to/bin/searchd bundle exec rake spec
 
@@ -301,6 +301,16 @@ You may also compile the C extension and run the specs separately, if you prefer
 
     bundle exec rake compile
     bundle exec rspec spec/unit/
+
+### Footnotes
+
+  [1] You can build a local copy of sphinx without installing it on the system:
+
+    cd sphinx-2.0.4/
+    ./configure
+    make
+
+  The searchd binary will be found in /path/to/sphinx-2.0.4/src/searchd.
 
 ## Future Plans
 
