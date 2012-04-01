@@ -297,6 +297,11 @@ To run the unit tests alone, without the need for Sphinx:
 If you have made changes to the C extension, those changes will be compiled and installed
 before the specs are run.
 
+You may also compile the C extension and run the specs separately, if you prefer:
+
+    bundle exec rake compile
+    bundle exec rspec spec/unit/
+
 ## Future Plans
 
 I plan to release gems for integration with DataMapper and ActiveRecord.  DataMapper
