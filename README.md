@@ -13,20 +13,6 @@ search may be implemented, while remaining light and simple.
 Data structures are managed using core ruby data type (Array and Hash), ensuring
 simplicity and flexibilty.
 
-## Current Status
-
-This gem is in development.  It is not ready for production use.  I work for
-a company called Flippa.com, which currently implements faceted search in a PHP
-part of the website, using a slightly older version of Sphinx with lesser
-support for SphinxQL.  We want to move this search across to the ruby codebase
-of the website, but are held back by ruby's lack of support for Sphinx 2.
-
-Once a month the developers at Flippa are given three days to work on a project of
-their own choice.  This is my 'Triple Time' project.
-
-I anticipate another week or so of development before I can consider this project
-production-ready.
-
 ## Dependencies
 
   * ruby (>= 1.9)
@@ -35,13 +21,12 @@ production-ready.
 
 The gem builds a small (tiny) native extension for interfacing with mysql, as
 existing gems either did not support multi-queries, or were too flaky
-(i.e. ruby-mysql). I was also concerned about potential conflicts with any
-specific ORMs users may be using.  I will add a pure-ruby option in due course
-(it requires implementing a relatively small subset of the mysql 4.1/5.0 protocol).
+(i.e. ruby-mysql).  I will add a pure-ruby option in due course (it requires
+implementing a relatively small subset of the mysql 4.1 protocol).
 
 ## Usage
 
-The following features are all currently implemented, but more are coming.
+The following features are all currently implemented.
 
 ### Connecting to Sphinx
 
@@ -51,7 +36,7 @@ require "oedipus"
 sphinx = Oedipus.connect('localhost:9306') # sphinxql host
 ```
 
-### Inserting
+### Inserting (real-time indexes)
 
 ``` ruby
 sphinx[:articles].insert(
@@ -63,7 +48,7 @@ sphinx[:articles].insert(
 )
 ```
 
-### Replacing
+### Replacing (real-time indexes)
 
 ``` ruby
 sphinx[:articles].replace(
@@ -75,13 +60,13 @@ sphinx[:articles].replace(
 )
 ```
 
-### Updating
+### Updating (real-time indexes)
 
 ``` ruby
 sphinx[:articles].update(7, views: 103)
 ```
 
-### Deleting
+### Deleting (real-time indexes)
 
 ``` ruby
 sphinx[:articles].delete(7)
@@ -122,6 +107,26 @@ results = sphinx[:articles].search("badgers", limit: 2)
 #     { id: 11, author_id: 6, views: 23 }
 #   ]
 # }
+```
+
+### Fetching only specific attributes
+
+``` ruby
+sphinx[:articles].search(
+  "example",
+  attrs: [:id, :views]
+)
+```
+
+### Fetching additional attributes (including expressions)
+
+Any valid field expression may be fetched.  Be sure to alias it if you want to order by it.
+
+``` ruby
+sphinx[:articles].search(
+  "example",
+  attrs: [:*, "WEIGHT() AS wgt"]
+)
 ```
 
 ### Attribute filters
@@ -199,6 +204,35 @@ sphinx[:articles].search(
 )
 ```
 
+### Ordering
+
+``` ruby
+sphinx[:articles].search("badgers", order: { views: :asc })
+```
+
+Special handling is done for ordering by relevance.
+
+``` ruby
+sphinx[:articles].search("badgers", order: { relevance: :desc })
+```
+
+In the above case, Oedipus explicity adds `WEIGHT() AS relevance` to the `:attrs`
+option.  You can manually set up the relevance sort if you wish to name the weighting
+attribute differently.
+
+### Limits and offsets
+
+Note that Sphinx applies a limit of 20 by default, so you probably want to specify
+a limit yourself.  You are bound by your `max_matches` setting in sphinx.conf.
+
+Note that the meta data will still indicate the actual number of results that matched;
+you simply get a smaller collection of materialized records.
+
+``` ruby
+sphinx[:articles].search("bobcats", limit: 50)
+sphinx[:articles].search("bobcats", limit: 50, offset: 150)
+```
+
 ### Faceted searching
 
 A faceted search takes a base query and a set of additional queries that are
@@ -274,30 +308,11 @@ results = sphinx[:articles].multi_search(
 # }
 ```
 
-### Limits and offsets
-
-Note that Sphinx applies a limit of 20 by default, so you probably want to specify
-a limit yourself.  You are bound by your `max_matches` setting in sphinx.conf.
-
-Note that the meta data will still indicate the actual number of results that matched;
-you simply get a smaller collection of materialized records.
-
-``` ruby
-sphinx[:articles].search("bobcats", limit: 50)
-sphinx[:articles].search("bobcats", limit: 50, offset: 150)
-```
-
-### Ordering
-
-``` ruby
-sphinx[:articles].search("badgers", order: { views: :asc })
-```
-
 ## Running the specs
 
 There are both unit tests and integration tests in the specs/ directory.  By default they
 will both run, but in order for the integration specs to work, you need a locally
-installed copy of Sphinx [1].  You then execute the specs as follows:
+installed copy of [Sphinx] [1].  You then execute the specs as follows:
 
     SEARCHD=/path/to/bin/searchd bundle exec rake spec
 
@@ -318,7 +333,7 @@ You may also compile the C extension and run the specs separately, if you prefer
 
 ### Footnotes
 
-  [1] You can build a local copy of sphinx without installing it on the system:
+  [1]: You can build a local copy of sphinx without installing it on the system:
 
     cd sphinx-2.0.4/
     ./configure

@@ -30,7 +30,7 @@ module Oedipus
     #   a SphinxQL query
     def select(query, filters)
       [
-        from,
+        from(filters),
         conditions(query, filters),
         order_by(filters),
         limits(filters)
@@ -85,8 +85,23 @@ module Oedipus
 
     private
 
-    def from
-      "SELECT * FROM #{@index_name}"
+    private
+
+    def fields(filters)
+      filters.fetch(:attrs, [:*]).dup.tap do |fields|
+        if fields.none? { |a| /\brelevance\n/ === a } && normalize_order(filters).key?(:relevance)
+          fields << "WEIGHT() AS relevance"
+        end
+      end
+    end
+
+    def from(filters)
+      [
+        "SELECT",
+        fields(filters).join(", "),
+        "FROM",
+        @index_name
+      ].join(" ")
     end
 
     def into(type, id, attributes)
@@ -108,7 +123,7 @@ module Oedipus
 
     def attribute_conditions(filters)
       filters \
-        .reject { |k, v| [:limit, :offset, :order].include?(k.to_sym) } \
+        .reject { |k, v| [:attrs, :limit, :offset, :order].include?(k.to_sym) } \
         .map    { |k, v| "#{k} #{Comparison.of(v)}" }
     end
 
@@ -119,12 +134,16 @@ module Oedipus
     end
 
     def order_by(filters)
-      return unless filters.key?(:order)
+      return unless (order = normalize_order(filters)).any?
 
       [
         "ORDER BY",
-        Array(filters[:order]).map { |k, dir| "#{k} #{dir ? dir.to_s.upcase : 'ASC'}" }.join(", ")
+        order.map { |k, dir| "#{k} #{dir.to_s.upcase}" }.join(", ")
       ].join(" ")
+    end
+
+    def normalize_order(filters)
+      Hash[Array(filters[:order]).map { |k, v| [k.to_sym, v || :asc] }]
     end
 
     def limits(filters)

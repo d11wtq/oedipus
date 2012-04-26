@@ -138,10 +138,10 @@ describe Oedipus::Index do
 
   describe "#search" do
     before(:each) do
-      index.insert(1, title: "Badgers and foxes",   views: 150)
-      index.insert(2, title: "Rabbits and hares",   views: 87)
-      index.insert(3, title: "Badgers in the wild", views: 41)
-      index.insert(4, title: "Badgers for all!",    views: 3003)
+      index.insert(1, title: "Badgers and foxes",         views: 150)
+      index.insert(2, title: "Rabbits and hares",         views: 87)
+      index.insert(3, title: "Badgers in the wild",       views: 41)
+      index.insert(4, title: "Badgers for all, badgers!", views: 3003)
     end
 
     context "by fulltext matching" do
@@ -209,6 +209,33 @@ describe Oedipus::Index do
           { id: 4, views: 3003, user_id: 0, status: "" },
           { id: 1, views: 150,  user_id: 0, status: "" },
           { id: 3, views: 41,   user_id: 0, status: "" },
+        ]
+      end
+
+      context "by relevance" do
+        it "returns the results ordered by most relevant" do
+          records = index.search("badgers", order: {relevance: :desc})[:records]
+          records.first[:relevance].should > records.last[:relevance]
+        end
+      end
+    end
+
+    context "with attribute additions" do
+      it "fetches the additional attributes" do
+        index.search("badgers", attrs: [:*, "7 AS x"])[:records].should == [
+          { id: 1, views: 150,  user_id: 0, status: "", x: 7 },
+          { id: 3, views: 41,   user_id: 0, status: "", x: 7 },
+          { id: 4, views: 3003, user_id: 0, status: "", x: 7 },
+        ]
+      end
+    end
+
+    context "with attribute restrictions" do
+      it "fetches the restricted attributes" do
+        index.search("badgers", attrs: [:id, :views])[:records].should == [
+          { id: 1, views: 150  },
+          { id: 3, views: 41   },
+          { id: 4, views: 3003 },
         ]
       end
     end

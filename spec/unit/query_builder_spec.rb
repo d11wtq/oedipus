@@ -91,6 +91,12 @@ describe Oedipus::QueryBuilder do
       end
     end
 
+    context "with explicit attributes" do
+      it "puts the attributes in the select clause" do
+        builder.select("cats", attrs: [:*, "FOO() AS f"]).should =~ /SELECT \*, FOO\(\) AS f FROM posts/
+      end
+    end
+
     context "with a limit" do
       it "applies a LIMIT with an offset of 0" do
         builder.select("dogs", limit: 50).should =~ /SELECT .* FROM posts WHERE .* LIMIT 0, 50/
@@ -122,6 +128,12 @@ describe Oedipus::QueryBuilder do
 
       it "supports multiple orders" do
         builder.select("cats", order: {views: :asc, author_id: :desc}).should =~ /SELECT .* FROM posts WHERE .* ORDER BY views ASC, author_id DESC/
+      end
+
+      context "by relevance" do
+        it "injects a weight() attribute" do
+          builder.select("cats", order: {relevance: :desc}).should =~ /SELECT \*, WEIGHT\(\) AS relevance FROM posts WHERE .* ORDER BY relevance DESC/
+        end
       end
     end
   end
