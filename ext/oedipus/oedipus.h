@@ -13,7 +13,7 @@
 /*! Internal struct used to reference a mysql connection */
 typedef struct {
   /*! Boolean representing the connected state */
-  int   connected;
+  int     connected;
   /*! The actual pointer allocated by mysql_init() */
   MYSQL * ptr;
 } OdpMysql;
@@ -47,4 +47,4 @@ static VALUE odp_cast_value(MYSQL_FIELD f, char * v, unsigned long len);
 static void odp_raise(VALUE self, const char *msg);
 
 /*! Free memory allocated to mysql */
-static void odp_free(OdpMysql *conn);
+static void odp_free(OdpMysql * conn);

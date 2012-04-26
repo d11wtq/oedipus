@@ -160,7 +160,7 @@ static VALUE odp_query(VALUE self, VALUE sql) {
 
 /* -- Internal functions -- */
 
-static void odp_raise(VALUE self, const char *msg) {
+static void odp_raise(VALUE self, const char * msg) {
   OdpMysql * conn;
 
   Data_Get_Struct(self, OdpMysql, conn);
@@ -168,7 +168,7 @@ static void odp_raise(VALUE self, const char *msg) {
            "%s. Error %u: %s", msg, mysql_errno(conn->ptr), mysql_error(conn->ptr));
 }
 
-static void odp_free(OdpMysql *conn) {
+static void odp_free(OdpMysql * conn) {
   if (conn->connected) {
     mysql_close(conn->ptr);
   }

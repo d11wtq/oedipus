@@ -10,14 +10,14 @@ ActiveRecord or DataMapper... though this will follow in separate gems.
 Oedipus provides a level of abstraction in terms of the ease with which faceted
 search may be implemented, while remaining light and simple.
 
-Data structures are managed using core ruby data type (Array and Hash), ensuring
+Data structures are managed using core ruby data types (Array and Hash), ensuring
 simplicity and flexibilty.
 
 ## Dependencies
 
   * ruby (>= 1.9)
   * sphinx (>= 2.0.2)
-  * mysql.h / client development libraries (>= 4.1)
+  * mysql client development libraries (>= 4.1)
 
 The gem builds a small (tiny) native extension for interfacing with mysql, as
 existing gems either did not support multi-queries, or were too flaky

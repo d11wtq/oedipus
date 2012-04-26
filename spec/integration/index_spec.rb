@@ -8,12 +8,23 @@
 ##
 
 require "spec_helper"
+require "oedipus/rspec/test_harness"
 
 describe Oedipus::Index do
-  include Oedipus::TestHarness
+  include Oedipus::RSpec::TestHarness
 
-  let(:conn)  { Oedipus::Connection.new(searchd_host) }
-  let(:index) { Oedipus::Index.new(:posts_rt, conn) }
+  before(:all) do
+    set_data_dir File.expand_path("../../data", __FILE__)
+    set_searchd  ENV["SEARCHD"]
+    start_searchd
+  end
+
+  after(:all) { stop_searchd }
+
+  before(:each) { empty_indexes }
+
+  let(:conn)     { Oedipus::Connection.new(searchd_host) }
+  let(:index)    { Oedipus::Index.new(:posts_rt, conn) }
 
   describe "#insert" do
     context "with valid data" do
