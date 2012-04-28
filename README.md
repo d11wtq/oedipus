@@ -5,7 +5,8 @@ real-time indexes and multi and/or faceted searches.
 
 It is not a clone of the PHP API, rather it is written from the ground up,
 wrapping the SphinxQL API offered by searchd.  Nor is it a plugin for
-ActiveRecord or DataMapper... though this will follow in separate gems.
+ActiveRecord or DataMapper... though this will follow in separate gems (see
+[oedipus-dm](https://github.com/d11wtq/oedipus-dm)).
 
 Oedipus provides a level of abstraction in terms of the ease with which faceted
 search may be implemented, while remaining light and simple.
@@ -344,11 +345,12 @@ You may also compile the C extension and run the specs separately, if you prefer
 ## Future Plans
 
   * Integration with DataMapper and ActiveRecord (DataMapper first)
+  * Support for re-indexing non-realtime indexes from ruby code
   * Distributed index support (sharding writes between indexes)
   * Make C extension optional and provide an implementation in pure-ruby
   * N-dimensional faceted search (facets inside of facets)
-  * Query translation layer for Google-style AND/OR/NOT interpretation
-  * Fulltext query sanitization for unsafe user input (e.g. @missing field)
+  * Query translation layer for Lucene-style AND/OR/NOT and attribute:value interpretation
+  * Fulltext query sanitization for unsafe user input (e.g. @@missing field)
 
 ## Copyright and Licensing
 
