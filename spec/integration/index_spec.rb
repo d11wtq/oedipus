@@ -147,6 +147,25 @@ describe Oedipus::Index do
     end
   end
 
+  describe "#delete" do
+    before(:each) do
+      index.insert(
+        1,
+        title:   "Badgers",
+        body:    "They live in setts, do badgers.",
+        views:   721,
+        user_id: 7
+      )
+    end
+
+    context "with valid existing data" do
+      it "entirely deletes the record" do
+        index.delete(1)
+        index.fetch(1).should be_nil
+      end
+    end
+  end
+
   describe "#search" do
     before(:each) do
       index.insert(1, title: "Badgers and foxes",         views: 150)
@@ -179,6 +198,18 @@ describe Oedipus::Index do
           { id: 2, views: 87,   user_id: 0, status: "" },
           { id: 3, views: 41,   user_id: 0, status: "" }
         ]
+      end
+
+      pending "the sphinxql grammar does not currently support this, though I'm patching it" do
+        context "with string attributes" do
+          before(:each) do
+            index.insert(5, title: "No more badgers, please", views: 0, status: "new")
+          end
+
+          it "filters by the string attribute" do
+            index.search(status: "new")[:records].should == [{ id: 5, views: 0, user_id: 0, status: "new" }]
+          end
+        end
       end
     end
 

@@ -76,6 +76,20 @@ module Oedipus
       @conn.execute(@builder.replace(id, hash))
     end
 
+    # Delete the record with the ID +id+.
+    #
+    # @example
+    #   index.delete(42)
+    #
+    # @param [Integer] id
+    #   the unique ID of the document in the index
+    #
+    # @return [Fixnum]
+    #   the number of rows deleted (currently always 1 or 0)
+    def delete(id)
+      @conn.execute(@builder.delete(id))
+    end
+
     # Fetch a single document by its ID.
     #
     # Returns the Hash of attributes if found, otherwise nil.

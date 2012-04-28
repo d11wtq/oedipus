@@ -83,7 +83,16 @@ module Oedipus
       into("REPLACE", id, attributes)
     end
 
-    private
+    # Build a SphinxQL query to delete the record identified by +id+.
+    #
+    # @param [Fixnum] id
+    #   the unique ID of the document to delete
+    #
+    # @return [String]
+    #   the SphinxQL to delete the record
+    def delete(id)
+      "DELETE FROM #{@index_name} WHERE id = #{Connection.quote(id)}"
+    end
 
     private
 

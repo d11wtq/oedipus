@@ -159,4 +159,10 @@ describe Oedipus::QueryBuilder do
       builder.replace(3, title: "example", views: 9).should == "REPLACE INTO posts (id, title, views) VALUES (3, 'example', 9)"
     end
   end
+
+  describe "#delete" do
+    it "includes the ID" do
+      builder.delete(3).should == "DELETE FROM posts WHERE id = 3"
+    end
+  end
 end
