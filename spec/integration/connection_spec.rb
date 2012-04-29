@@ -23,8 +23,6 @@ describe Oedipus::Connection do
 
   before(:each) { empty_indexes }
 
-  let(:conn) { Oedipus::Connection.new(searchd_host) }
-
   describe "#initialize" do
     context "with a hosname:port string" do
       context "on successful connection" do

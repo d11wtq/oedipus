@@ -29,6 +29,7 @@ require "oedipus/query_builder"
 
 require "oedipus/connection_error"
 require "oedipus/connection"
+require "oedipus/connection/pool"
 
 require "oedipus/index"
 

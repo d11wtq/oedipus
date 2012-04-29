@@ -65,11 +65,21 @@ module Oedipus
     #   a Hash containing :host and :port
     #
     # The connection will be established on initialization.
+    #
+    # The underlying implementation uses a thread-safe connection pool.
     def initialize(options)
       options = options.kind_of?(String) ?
         Hash[ [:host, :port].zip(options.split(":")) ] :
         options
-      @conn = Oedipus::Mysql.new(options[:host], options[:port].to_i)
+
+      @pool = Pool.new(
+        host: options[:host],
+        port: options[:port].to_i,
+        size: options.fetch(:pool_size, 8),
+        ttl:  60
+      )
+
+      assert_valid_pool
     end
 
     # Acess a specific index for querying.
@@ -96,7 +106,7 @@ module Oedipus
     #
     # Note that SphinxQL does not support prepared statements.
     def multi_query(sql)
-      @conn.query(sql)
+      @pool.acquire { |conn| conn.query(sql) }
     end
 
     # Execute a single read query.
@@ -109,7 +119,7 @@ module Oedipus
     #
     # Note that SphinxQL does not support prepared statements.
     def query(sql)
-      @conn.query(sql).first
+      @pool.acquire { |conn| conn.query(sql).first }
     end
 
     # Execute a non-read query.
@@ -122,7 +132,13 @@ module Oedipus
     #
     # Note that SphinxQL does not support prepared statements.
     def execute(sql)
-      @conn.execute(sql)
+      @pool.acquire { |conn| conn.execute(sql) }
+    end
+
+    private
+
+    def assert_valid_pool
+      @pool.acquire { nil }
     end
   end
 end
