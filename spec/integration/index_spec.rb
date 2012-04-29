@@ -283,6 +283,97 @@ describe Oedipus::Index do
     end
   end
 
+  describe "#search", "with :facets" do
+    before(:each) do
+      index.insert(1, title: "Badgers and foxes",   body: "Badgers", views: 150,  user_id: 1)
+      index.insert(2, title: "Rabbits and hares",   body: "Rabbits", views: 87,   user_id: 1)
+      index.insert(3, title: "Badgers in the wild", body: "Test",    views: 41,   user_id: 2)
+      index.insert(4, title: "Badgers for all!",    body: "For all", views: 3003, user_id: 1)
+    end
+
+    context "with additional attribute filters" do
+      let(:results) do
+        index.search(
+          "badgers",
+          facets: {
+            popular:  {views: Oedipus.gte(50)},
+            di_carla: {user_id: 2}
+          }
+        )
+      end
+
+      it "returns the main results in the top-level" do
+        results[:records].should == [
+          { id: 1, views: 150,  user_id: 1, status: "" },
+          { id: 3, views: 41,   user_id: 2, status: "" },
+          { id: 4, views: 3003, user_id: 1, status: "" }
+        ]
+      end
+
+      it "applies the filters on top of the base query" do
+        results[:facets][:popular][:records].should == [
+          { id: 1, views: 150,  user_id: 1, status: "" },
+          { id: 4, views: 3003, user_id: 1, status: "" }
+        ]
+        results[:facets][:di_carla][:records].should == [
+          { id: 3, views: 41, user_id: 2, status: "" }
+        ]
+      end
+    end
+
+    context "with overriding attribute filters" do
+      let(:results) do
+        index.search(
+          "badgers",
+          user_id: 1,
+          facets: {
+            di_carla: {user_id: 2}
+          }
+        )
+      end
+
+      it "applies the filters on top of the base query" do
+        results[:facets][:di_carla][:records].should == [
+          { id: 3, views: 41, user_id: 2, status: "" }
+        ]
+      end
+    end
+
+    context "with overriding overriding fulltext queries" do
+      let(:results) do
+        index.search(
+          "badgers",
+          facets: {
+            rabbits: "rabbits"
+          }
+        )
+      end
+
+      it "entirely replaces the base query" do
+        results[:facets][:rabbits][:records].should == [
+          { id: 2, views: 87, user_id: 1, status: "" }
+        ]
+      end
+    end
+
+    context "with overriding refined fulltext queries" do
+      let(:results) do
+        index.search(
+          "badgers",
+          facets: {
+            in_body: "@body (%{query})"
+          }
+        )
+      end
+
+      it "merges the queries" do
+        results[:facets][:in_body][:records].should == [
+          { id: 1, views: 150,  user_id: 1, status: "" },
+        ]
+      end
+    end
+  end
+
   describe "#multi_search" do
     before(:each) do
       index.insert(1, title: "Badgers and foxes",   views: 150,  user_id: 1)
@@ -325,97 +416,6 @@ describe Oedipus::Index do
         )
         results[:shiela][:total_found].should == 3
         results[:barry][:total_found].should == 1
-      end
-    end
-  end
-
-  describe "#faceted_search" do
-    before(:each) do
-      index.insert(1, title: "Badgers and foxes",   body: "Badgers", views: 150,  user_id: 1)
-      index.insert(2, title: "Rabbits and hares",   body: "Rabbits", views: 87,   user_id: 1)
-      index.insert(3, title: "Badgers in the wild", body: "Test",    views: 41,   user_id: 2)
-      index.insert(4, title: "Badgers for all!",    body: "For all", views: 3003, user_id: 1)
-    end
-
-    context "with additional attribute filters" do
-      let(:results) do
-        index.faceted_search(
-          "badgers",
-          facets: {
-            popular:  {views: Oedipus.gte(50)},
-            di_carla: {user_id: 2}
-          }
-        )
-      end
-
-      it "returns the main results in the top-level" do
-        results[:records].should == [
-          { id: 1, views: 150,  user_id: 1, status: "" },
-          { id: 3, views: 41,   user_id: 2, status: "" },
-          { id: 4, views: 3003, user_id: 1, status: "" }
-        ]
-      end
-
-      it "applies the filters on top of the base query" do
-        results[:facets][:popular][:records].should == [
-          { id: 1, views: 150,  user_id: 1, status: "" },
-          { id: 4, views: 3003, user_id: 1, status: "" }
-        ]
-        results[:facets][:di_carla][:records].should == [
-          { id: 3, views: 41, user_id: 2, status: "" }
-        ]
-      end
-    end
-
-    context "with overriding attribute filters" do
-      let(:results) do
-        index.faceted_search(
-          "badgers",
-          user_id: 1,
-          facets: {
-            di_carla: {user_id: 2}
-          }
-        )
-      end
-
-      it "applies the filters on top of the base query" do
-        results[:facets][:di_carla][:records].should == [
-          { id: 3, views: 41, user_id: 2, status: "" }
-        ]
-      end
-    end
-
-    context "with overriding overriding fulltext queries" do
-      let(:results) do
-        index.faceted_search(
-          "badgers",
-          facets: {
-            rabbits: "rabbits"
-          }
-        )
-      end
-
-      it "entirely replaces the base query" do
-        results[:facets][:rabbits][:records].should == [
-          { id: 2, views: 87, user_id: 1, status: "" }
-        ]
-      end
-    end
-
-    context "with overriding refined fulltext queries" do
-      let(:results) do
-        index.faceted_search(
-          "badgers",
-          facets: {
-            in_body: "@body (%{query})"
-          }
-        )
-      end
-
-      it "merges the queries" do
-        results[:facets][:in_body][:records].should == [
-          { id: 1, views: 150,  user_id: 1, status: "" },
-        ]
       end
     end
   end

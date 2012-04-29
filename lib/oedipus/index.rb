@@ -117,26 +117,12 @@ module Oedipus
     # @example Attribute search only
     #   index.search(author_id: 57)
     #
-    # @param [String] query
-    #   a fulltext query
-    #
-    # @param [Hash] filters
-    #   attribute filters, limits, sorting and other options
-    #
-    # @return [Hash]
-    #   a Hash containing meta data, with the records in :records
-    def search(*args)
-      multi_search(_main_: args)[:_main_]
-    end
-
-    # Perform a faceted search on the index, using a base query and one or more facets.
-    #
-    # The base query is inherited by each facet, which may override (or refine) the
-    # query.
+    # When performing a faceted search, the base query is inherited by each facet, which
+    # may override (or refine) the query.
     #
     # The results returned include a :facets key, containing the results for each facet.
     #
-    # @example
+    # @example Performing a faceted search
     #   index.faceted_search(
     #     "cats | dogs",
     #     category_id: 7,
@@ -146,16 +132,34 @@ module Oedipus
     #     }
     #   )
     #
-    # @param [String] fulltext_query
-    #   a fulltext query to search on, optional
+    # @param [String] query
+    #   a fulltext query
     #
     # @param [Hash] options
-    #   attribute filters and facets in a sub-hash
+    #   attribute filters, limits, sorting, facets and other options
+    #
+    # @option [Hash] facets
+    #   variations on the main search to return nested in the result
+    #
+    # @option [Array] attrs
+    #   attributes to fetch from the index, either as Symbols, or SphinxQL fragments
+    #
+    # @option [Hash] order
+    #   an attr => direction mapping of sort orders
+    #
+    # @option [Fixnum] limit
+    #   a limit to apply, defaults to 20 inside Sphinx itself
+    #
+    # @option [Fixnum] offset
+    #   an offset to apply, defaults to 0
+    #
+    # @option [Object] everything_else
+    #   all additional options are taken to be attribute filters
     #
     # @return [Hash]
-    #   a Hash whose top-level result set is for the main query and which
-    #   contains a :facets element with keys mapping 1:1 for all facets
-    def faceted_search(*args)
+    #   a Hash containing meta data, with the records in :records, and if any
+    #   facets were included, the facets inside the :facets Hash
+    def search(*args)
       query, options = extract_query_data(args)
       main_query     = [query, options.reject { |k, _| k == :facets }]
       facets         = merge_queries(main_query, options.fetch(:facets, {}))
@@ -165,6 +169,17 @@ module Oedipus
           k == :_main_ ? results.merge!(v) : results[:facets].merge!(k => v)
         end
       end
+    end
+
+    # Perform a faceted search on the index, using a base query and one or more facets.
+    #
+    # This method is deprecated and will be removed in version 1.0. Use #search instead.
+    #
+    # @deprecated
+    #
+    # @see #search
+    def faceted_search(*args)
+      search(*args)
     end
 
     # Perform a a batch search on the index.

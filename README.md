@@ -251,7 +251,7 @@ it does two optimizations, though in future this will likely improve further, so
 using this technique to do your faceted searches is a good idea.
 
 ``` ruby
-results = sphinx[:articles].facted_search(
+results = sphinx[:articles].search(
   "badgers",
   facets: {
     popular:         { views: 100..10000 },
