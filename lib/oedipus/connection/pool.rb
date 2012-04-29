@@ -93,9 +93,9 @@ module Oedipus
             sleep 15
             @lock.synchronize {
               avail.each do |instance|
-                if @expiries[instance] < Time.now
-                  @available.delete(instance)
-                  @expiries.delete(instance)
+                if exp[instance] < Time.now
+                  avail.delete(instance)
+                  exp.delete(instance)
                   instance.close
                 end
               end
