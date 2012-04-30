@@ -372,6 +372,29 @@ describe Oedipus::Index do
         ]
       end
     end
+
+    context "with multi-dimensional facets" do
+      let(:results) do
+        index.search(
+          "badgers",
+          facets: {
+            popular: {
+              views: Oedipus.gte(50),
+              facets: {
+                with_foxes: "%{query} & foxes"
+              }
+            },
+          }
+        )
+      end
+
+      it "merges the results in the outer facet" do
+        results[:facets][:popular][:records].should == [
+          { id: 1, views: 150,  user_id: 1, status: "" },
+          { id: 4, views: 3002, user_id: 1, status: "" },
+        ]
+      end
+    end
   end
 
   describe "#multi_search" do
