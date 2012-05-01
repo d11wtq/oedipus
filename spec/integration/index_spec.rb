@@ -63,7 +63,7 @@ describe Oedipus::Index do
 
     context "with a valid document ID" do
       it "returns the matched document" do
-        index.fetch(2).should == { id: 2, views: 73,  user_id: 0, status: "" }
+        index.fetch(2).should == { id: 2, views: 73,  user_id: 0, state: "" }
       end
     end
 
@@ -86,7 +86,7 @@ describe Oedipus::Index do
 
       it "modifies the data" do
         index.update(1, views: 721)
-        index.fetch(1).should == { id: 1, views: 721, user_id: 7, status: "" }
+        index.fetch(1).should == { id: 1, views: 721, user_id: 7, state: "" }
       end
     end
 
@@ -123,7 +123,7 @@ describe Oedipus::Index do
 
       it "entirely replaces the record" do
         index.replace(1, title: "Badgers and foxes", views: 150)
-        index.fetch(1).should == { id: 1, views: 150, user_id: 0, status: "" }
+        index.fetch(1).should == { id: 1, views: 150, user_id: 0, state: "" }
       end
     end
 
@@ -134,7 +134,7 @@ describe Oedipus::Index do
 
       it "entirely replaces the record" do
         index.replace(2, title: "Beer and wine", views: 15)
-        index.fetch(2).should == { id: 2, views: 15, user_id: 0, status: "" }
+        index.fetch(2).should == { id: 2, views: 15, user_id: 0, state: "" }
       end
     end
 
@@ -181,9 +181,9 @@ describe Oedipus::Index do
 
       it "includes the matches records" do
         index.search("badgers")[:records].should == [
-          { id: 1, views: 150,  user_id: 0, status: "" },
-          { id: 3, views: 41,   user_id: 0, status: "" },
-          { id: 4, views: 3003, user_id: 0, status: "" }
+          { id: 1, views: 150,  user_id: 0, state: "" },
+          { id: 3, views: 41,   user_id: 0, state: "" },
+          { id: 4, views: 3003, user_id: 0, state: "" }
         ]
       end
     end
@@ -195,19 +195,19 @@ describe Oedipus::Index do
 
       it "includes the matches records" do
         index.search(views: 40..90)[:records].should == [
-          { id: 2, views: 87,   user_id: 0, status: "" },
-          { id: 3, views: 41,   user_id: 0, status: "" }
+          { id: 2, views: 87,   user_id: 0, state: "" },
+          { id: 3, views: 41,   user_id: 0, state: "" }
         ]
       end
 
       pending "the sphinxql grammar does not currently support this, though I'm patching it" do
         context "with string attributes" do
           before(:each) do
-            index.insert(5, title: "No more badgers, please", views: 0, status: "new")
+            index.insert(5, title: "No more badgers, please", views: 0, state: "new")
           end
 
           it "filters by the string attribute" do
-            index.search(status: "new")[:records].should == [{ id: 5, views: 0, user_id: 0, status: "new" }]
+            index.search(state: "new")[:records].should == [{ id: 5, views: 0, user_id: 0, state: "new" }]
           end
         end
       end
@@ -220,8 +220,8 @@ describe Oedipus::Index do
 
       it "includes the matches records" do
         index.search("badgers", views: Oedipus.gt(100))[:records].should == [
-          { id: 1, views: 150,  user_id: 0, status: "" },
-          { id: 4, views: 3003, user_id: 0, status: "" }
+          { id: 1, views: 150,  user_id: 0, state: "" },
+          { id: 4, views: 3003, user_id: 0, state: "" }
         ]
       end
     end
@@ -233,14 +233,14 @@ describe Oedipus::Index do
 
       it "returns the limited subset of the results" do
         index.search("badgers", limit: 2)[:records].should == [
-          { id: 1, views: 150,  user_id: 0, status: "" },
-          { id: 3, views: 41,   user_id: 0, status: "" }
+          { id: 1, views: 150,  user_id: 0, state: "" },
+          { id: 3, views: 41,   user_id: 0, state: "" }
         ]
       end
 
       it "can use an offset" do
         index.search("badgers", limit: 1, offset: 1)[:records].should == [
-          { id: 3, views: 41,   user_id: 0, status: "" }
+          { id: 3, views: 41,   user_id: 0, state: "" }
         ]
       end
     end
@@ -248,9 +248,9 @@ describe Oedipus::Index do
     context "with ordering" do
       it "returns the results ordered accordingly" do
         index.search("badgers", order: {views: :desc})[:records].should == [
-          { id: 4, views: 3003, user_id: 0, status: "" },
-          { id: 1, views: 150,  user_id: 0, status: "" },
-          { id: 3, views: 41,   user_id: 0, status: "" },
+          { id: 4, views: 3003, user_id: 0, state: "" },
+          { id: 1, views: 150,  user_id: 0, state: "" },
+          { id: 3, views: 41,   user_id: 0, state: "" },
         ]
       end
 
@@ -265,9 +265,9 @@ describe Oedipus::Index do
     context "with attribute additions" do
       it "fetches the additional attributes" do
         index.search("badgers", attrs: [:*, "7 AS x"])[:records].should == [
-          { id: 1, views: 150,  user_id: 0, status: "", x: 7 },
-          { id: 3, views: 41,   user_id: 0, status: "", x: 7 },
-          { id: 4, views: 3003, user_id: 0, status: "", x: 7 },
+          { id: 1, views: 150,  user_id: 0, state: "", x: 7 },
+          { id: 3, views: 41,   user_id: 0, state: "", x: 7 },
+          { id: 4, views: 3003, user_id: 0, state: "", x: 7 },
         ]
       end
     end
@@ -304,19 +304,19 @@ describe Oedipus::Index do
 
       it "returns the main results in the top-level" do
         results[:records].should == [
-          { id: 1, views: 150,  user_id: 1, status: "" },
-          { id: 3, views: 41,   user_id: 2, status: "" },
-          { id: 4, views: 3003, user_id: 1, status: "" }
+          { id: 1, views: 150,  user_id: 1, state: "" },
+          { id: 3, views: 41,   user_id: 2, state: "" },
+          { id: 4, views: 3003, user_id: 1, state: "" }
         ]
       end
 
       it "applies the filters on top of the base query" do
         results[:facets][:popular][:records].should == [
-          { id: 1, views: 150,  user_id: 1, status: "" },
-          { id: 4, views: 3003, user_id: 1, status: "" }
+          { id: 1, views: 150,  user_id: 1, state: "" },
+          { id: 4, views: 3003, user_id: 1, state: "" }
         ]
         results[:facets][:di_carla][:records].should == [
-          { id: 3, views: 41, user_id: 2, status: "" }
+          { id: 3, views: 41, user_id: 2, state: "" }
         ]
       end
     end
@@ -334,7 +334,7 @@ describe Oedipus::Index do
 
       it "applies the filters on top of the base query" do
         results[:facets][:di_carla][:records].should == [
-          { id: 3, views: 41, user_id: 2, status: "" }
+          { id: 3, views: 41, user_id: 2, state: "" }
         ]
       end
     end
@@ -351,7 +351,7 @@ describe Oedipus::Index do
 
       it "entirely replaces the base query" do
         results[:facets][:rabbits][:records].should == [
-          { id: 2, views: 87, user_id: 1, status: "" }
+          { id: 2, views: 87, user_id: 1, state: "" }
         ]
       end
     end
@@ -368,7 +368,7 @@ describe Oedipus::Index do
 
       it "merges the queries" do
         results[:facets][:in_body][:records].should == [
-          { id: 1, views: 150,  user_id: 1, status: "" },
+          { id: 1, views: 150,  user_id: 1, state: "" },
         ]
       end
     end
@@ -398,12 +398,12 @@ describe Oedipus::Index do
           rabbits: "rabbits"
         )
         results[:badgers][:records].should == [
-          { id: 1, views: 150,  user_id: 1, status: "" },
-          { id: 3, views: 41,   user_id: 2, status: "" },
-          { id: 4, views: 3003, user_id: 1, status: "" }
+          { id: 1, views: 150,  user_id: 1, state: "" },
+          { id: 3, views: 41,   user_id: 2, state: "" },
+          { id: 4, views: 3003, user_id: 1, state: "" }
         ]
         results[:rabbits][:records].should == [
-          { id: 2, views: 87, user_id: 1, status: "" }
+          { id: 2, views: 87, user_id: 1, state: "" }
         ]
       end
     end

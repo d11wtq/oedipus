@@ -70,7 +70,7 @@ module Oedipus
 
               rt_attr_uint   = user_id
               rt_attr_uint   = views
-              rt_attr_string = status
+              rt_attr_string = state
             }
 
             searchd
