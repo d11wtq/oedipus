@@ -388,10 +388,16 @@ describe Oedipus::Index do
         )
       end
 
-      it "merges the results in the outer facet" do
+      it "merges the results in the outer facets" do
         results[:facets][:popular][:records].should == [
-          { id: 1, views: 150,  user_id: 1, status: "" },
-          { id: 4, views: 3002, user_id: 1, status: "" },
+          { id: 1, views: 150,  user_id: 1, state: "" },
+          { id: 4, views: 3003, user_id: 1, state: "" }
+        ]
+      end
+
+      it "merges the results in the inner facets" do
+        results[:facets][:popular][:facets][:with_foxes][:records].should == [
+          { id: 1, views: 150,  user_id: 1, state: "" }
         ]
       end
     end

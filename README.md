@@ -1,7 +1,7 @@
 # Oedipus: Sphinx 2 Search Client for Ruby
 
 Oedipus is a client for the Sphinx search engine (>= 2.0.2), with support for
-real-time indexes and multi and/or faceted searches.
+real-time indexes and multi and/or multi-dimensional faceted searches.
 
 It is not a clone of the PHP API, rather it is written from the ground up,
 wrapping the SphinxQL API offered by searchd.  Nor is it a plugin for
@@ -13,6 +13,11 @@ search may be implemented, while remaining light and simple.
 
 Data structures are managed using core ruby data types (Array and Hash), ensuring
 simplicity and flexibilty.
+
+The current development focus is on supporting realtime indexes, where data is
+indexed from your application, rather than by running the indexer tool that comes
+with Sphinx.  You may use indexes that are indexed with the indexer tool, but
+Oedipus does not (yet) provide wrappers for indexing that data via ruby [1].
 
 ## Dependencies
 
@@ -242,13 +247,16 @@ from the base query.
 
 Oedipus allows you to replace '%{query}' in your facets with whatever was in the
 original query.  This can be useful if you want to provide facets that only
-perform the search in the title of the document (`"@title (%{query})"`) for example.
+perform the search in the title of the document (`"@title (%{query})"`) for
+example.
 
-Each facet is given a name, which is used to reference them in the results.
+Each facet is given a key, which is used to reference it in the results.  This
+key is any arbitrary object that can be used as a key in a ruby Hash.  You may,
+for example, use domain-specific objects as keys.
 
 Sphinx optimizes the queries by figuring out what the common parts are.  Currently
 it does two optimizations, though in future this will likely improve further, so
-using this technique to do your faceted searches is a good idea.
+using this technique to do your faceted searches is the correct approach.
 
 ``` ruby
 results = sphinx[:articles].search(
@@ -283,12 +291,57 @@ results = sphinx[:articles].search(
 # }
 ```
 
+#### Multi-dimensional faceted search
+
+If you can add facets to the root query, how about adding facets to the facets
+themselves?  Easy:
+
+``` ruby
+results = sphinx[:articles].search(
+  "badgers",
+  facets: {
+    popular: {
+      views:  100..10000,
+      facets: {
+        in_title: "@title (%{query})"
+      }
+    }
+  }
+)
+# => {
+#   total_found: 987,
+#   time: 0.000,
+#   records: [ ... ],
+#   facets: {
+#     popular: {
+#       total_found: 25,
+#       time: 0.000,
+#       records: [ ... ],
+#       facets: {
+#         in_title: {
+#           total_found: 24,
+#           time: 0.000,
+#           records: [ ... ]
+#         }
+#       }
+#     }
+#   }
+# }
+```
+
+In the above example, the nested facet `:in_title` inherits the default
+parameters from the facet `:popular`, which inherits its parameters from
+the root query.  The result is a search for "badgers" limited only to the
+title, with views between 100 and 10000.
+
+There is no limit imposed in Oedipus for how deeply facets can be nested.
+
 ### General purpose multi-search
 
 If you want to execute multiple queries in a batch that are not related to each
 other (which would be a faceted search), then you can use `#multi_search`.
 
-You pass a Hash of named queries and get a Hash of named resultsets.
+You pass a Hash of keyed-queries and get a Hash of keyed-resultsets.
 
 ``` ruby
 results = sphinx[:articles].multi_search(
@@ -313,7 +366,7 @@ results = sphinx[:articles].multi_search(
 
 There are both unit tests and integration tests in the specs/ directory.  By default they
 will both run, but in order for the integration specs to work, you need a locally
-installed copy of [Sphinx] [1].  You then execute the specs as follows:
+installed copy of [Sphinx] [2].  You then execute the specs as follows:
 
     SEARCHD=/path/to/bin/searchd bundle exec rake spec
 
@@ -334,7 +387,9 @@ You may also compile the C extension and run the specs separately, if you prefer
 
 ### Footnotes
 
-  [1]: You can build a local copy of sphinx without installing it on the system:
+  [1]: In practice I find such an abstraction not to be very useful, as it assumes a single-server setup
+
+  [2]: You can build a local copy of sphinx without installing it on the system:
 
     cd sphinx-2.0.4/
     ./configure
@@ -344,11 +399,10 @@ You may also compile the C extension and run the specs separately, if you prefer
 
 ## Future Plans
 
-  * Integration with DataMapper and ActiveRecord (DataMapper first)
+  * Integration ActiveRecord (DataMapper support has already been added)
   * Support for re-indexing non-realtime indexes from ruby code
   * Distributed index support (sharding writes between indexes)
   * Make C extension optional and provide an implementation in pure-ruby
-  * N-dimensional faceted search (facets inside of facets)
   * Query translation layer for Lucene-style AND/OR/NOT and attribute:value interpretation
   * Fulltext query sanitization for unsafe user input (e.g. @@missing field)
 

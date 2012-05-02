@@ -123,7 +123,7 @@ module Oedipus
     # The results returned include a :facets key, containing the results for each facet.
     #
     # @example Performing a faceted search
-    #   index.faceted_search(
+    #   index.search(
     #     "cats | dogs",
     #     category_id: 7,
     #     facets: {
@@ -131,6 +131,26 @@ module Oedipus
     #       recent:  {published_at: Oedipus.gt(Time.now.to_i - 7 * 86400)}
     #     }
     #   )
+    #
+    # To perform an n-dimensional faceted search, add a :facets option to each
+    # facet. Each facet will inherit from its immediate parent, which inerits
+    # from its parent, up to the root query.
+    #
+    # @example Performing a n-dimensional faceted search
+    #   index.search(
+    #     "cats | dogs",
+    #     facets: {
+    #       popular: {
+    #         views: Oedipus.gte(1000),
+    #         facets: {
+    #           in_title: "@title (%{query})"
+    #         }
+    #       }
+    #     }
+    #   )
+    #
+    # The results in a n-dimensional faceted search are returned with each set
+    # of facet results in turn containing a :facets element.
     #
     # @param [String] query
     #   a fulltext query
@@ -160,15 +180,7 @@ module Oedipus
     #   a Hash containing meta data, with the records in :records, and if any
     #   facets were included, the facets inside the :facets Hash
     def search(*args)
-      query, options = extract_query_data(args)
-      main_query     = [query, options.reject { |k, _| k == :facets }]
-      facets         = merge_queries(main_query, options.fetch(:facets, {}))
-
-      { facets: {} }.tap do |results|
-        multi_search({ _main_: main_query }.merge(facets)).each do |k, v|
-          k == :_main_ ? results.merge!(v) : results[:facets].merge!(k => v)
-        end
-      end
+      expand_facet_tree(multi_search(deep_merge_facets(args)))
     end
 
     # Perform a faceted search on the index, using a base query and one or more facets.
@@ -257,19 +269,51 @@ module Oedipus
       end
 
       case args[0]
-      when String then [args[0],       args.fetch(1, {})]
-      when Hash   then [default_query, args[0]          ]
+      when String then [args[0],       args.fetch(1, {}).dup]
+      when Hash   then [default_query, args[0].dup          ]
       else raise ArgumentError, "Invalid query argument type #{args.first.class}"
       end
     end
 
-    def merge_queries(base, others)
-      base_query, base_filters = base
+    def expand_facet_tree(result)
+      Hash[].tap do |tree|
+        result.each do |k, v|
+          t = tree
 
-      Hash[others.map { |k, q|
-        query, filters = extract_query_data(q, base_query)
-        [k, [query.gsub("%{query}", base_query), base_filters.merge(filters)]]
-      }]
+          k.each do |name|
+            f = t[:facets] ||= {}
+            t = f[name]    ||= {}
+          end
+
+          t.merge!(v)
+        end
+      end
+    end
+
+    def deep_merge_facets(base_args, list = {}, path = [])
+      # FIXME: Try and make this shorter and more functional in style
+      base_query, base_options = extract_query_data(base_args)
+
+      facets = base_options.delete(:facets)
+
+      list.merge!(path => [base_query, base_options])
+
+      unless facets.nil?
+        facets.each do |k, q|
+          facet_query, facet_options = extract_query_data(q, base_query)
+
+          deep_merge_facets(
+            [
+              facet_query.gsub("%{query}", base_query),
+              base_options.merge(facet_options)
+            ],
+            list,
+            path.dup << k
+          )
+        end
+      end
+
+      list
     end
   end
 end
