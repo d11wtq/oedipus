@@ -29,8 +29,6 @@ module Oedipus
           v.to_f
         when Numeric
           v
-        when NilClass
-          "NULL"
         else
           "'#{escape_str(v.to_s)}'"
         end
