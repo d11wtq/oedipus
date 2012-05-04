@@ -202,7 +202,6 @@ static VALUE odp_cast_value(MYSQL_FIELD f, char * v, unsigned long len) {
 
     case MYSQL_TYPE_DECIMAL:
     case MYSQL_TYPE_NEWDECIMAL:
-      rb_require("bigdecimal");
       return rb_funcall(rb_path2class("BigDecimal"),
                         rb_intern("new"),
                         1,
@@ -226,6 +225,8 @@ static VALUE odp_cast_value(MYSQL_FIELD f, char * v, unsigned long len) {
 /* -- Extension initialization -- */
 
 void Init_oedipus(void) {
+  rb_require("bigdecimal");
+
   VALUE mOedipus = rb_define_module("Oedipus");
   VALUE cMysql   = rb_define_class_under(mOedipus, "Mysql", rb_cObject);
 
