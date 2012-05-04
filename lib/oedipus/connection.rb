@@ -23,7 +23,7 @@ module Oedipus
       #
       # Note that single quotes are added to strings.
       def quote(v)
-        require "bigdecimal"
+        require "bigdecimal" unless defined? BigDecimal
         case v
         when BigDecimal, Rational, Complex
           v.to_f
