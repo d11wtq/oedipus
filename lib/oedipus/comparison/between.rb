@@ -10,13 +10,8 @@
 module Oedipus
   # Between comparison of range.
   class Comparison::Between < Comparison
-    def to_s
-      [
-        "BETWEEN",
-        Connection.quote(v.first),
-        "AND",
-        Connection.quote(v.exclude_end? ? v.end - 1 : v.end)
-      ].join(" ")
+    def to_sql
+      ["BETWEEN ? AND ?", v.first, v.exclude_end? ? v.end - 1 : v.end]
     end
 
     def inverse

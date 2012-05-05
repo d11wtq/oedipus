@@ -39,7 +39,7 @@ module Oedipus
     # @return [Fixnum]
     #   the number of rows inserted (currently always 1)
     def insert(id, hash)
-      @conn.execute(@builder.insert(id, hash))
+      @conn.execute(*@builder.insert(id, hash))
     end
 
     # Update the record with the ID +id+.
@@ -56,7 +56,7 @@ module Oedipus
     # @return [Fixnum]
     #   the number of rows updated (1 or 0)
     def update(id, hash)
-      @conn.execute(@builder.update(id, hash))
+      @conn.execute(*@builder.update(id, hash))
     end
 
     # Completely replace the record with the ID +id+.
@@ -73,7 +73,7 @@ module Oedipus
     # @return [Fixnum]
     #   the number of rows inserted (currentl always 1)
     def replace(id, hash)
-      @conn.execute(@builder.replace(id, hash))
+      @conn.execute(*@builder.replace(id, hash))
     end
 
     # Delete the record with the ID +id+.
@@ -87,7 +87,7 @@ module Oedipus
     # @return [Fixnum]
     #   the number of rows deleted (currently always 1 or 0)
     def delete(id)
-      @conn.execute(@builder.delete(id))
+      @conn.execute(*@builder.delete(id))
     end
 
     # Fetch a single document by its ID.
@@ -220,11 +220,16 @@ module Oedipus
         raise ArgumentError, "Argument must be a Hash of named queries (#{queries.class} given)"
       end
 
-      rs = @conn.multi_query(
-        queries.map { |key, args|
-          [@builder.select(*extract_query_data(args)), "SHOW META"]
-        }.flatten.join(";\n")
-      )
+      stmts       = []
+      bind_values = []
+
+      queries.each do |key, args|
+        str, *values = @builder.select(*extract_query_data(args))
+        stmts.push(str, "SHOW META")
+        bind_values.push(*values)
+      end
+
+      rs = @conn.multi_query(stmts.join(";\n"), *bind_values)
 
       Hash[].tap do |result|
         queries.keys.each do |key|

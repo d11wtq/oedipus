@@ -10,13 +10,8 @@
 module Oedipus
   # Outside comparison of range.
   class Comparison::Outside < Comparison
-    def to_s
-      [
-        "NOT BETWEEN",
-        Connection.quote(v.first),
-        "AND",
-        Connection.quote(v.exclude_end? ? v.end - 1 : v.end)
-      ].join(" ")
+    def to_sql
+      ["NOT BETWEEN ? AND ?", v.first, v.exclude_end? ? v.end - 1 : v.end]
     end
 
     def inverse

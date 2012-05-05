@@ -13,10 +13,10 @@ describe Oedipus::Comparison::GT do
   let(:comparison) { Oedipus::Comparison::GT.new(42) }
 
   it "draws as > v" do
-    comparison.to_s.should == "> 42"
+    comparison.to_sql.should == ["> ?", 42]
   end
 
   it "inverses as <= v" do
-    comparison.inverse.to_s.should == "<= 42"
+    comparison.inverse.to_sql.should == ["<= ?", 42]
   end
 end

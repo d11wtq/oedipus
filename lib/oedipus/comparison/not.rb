@@ -14,8 +14,8 @@ module Oedipus
       super(Comparison.of(v))
     end
 
-    def to_s
-      v.inverse.to_s
+    def to_sql
+      v.inverse.to_sql
     end
 
     def inverse

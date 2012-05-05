@@ -10,8 +10,8 @@
 module Oedipus
   # Greater than or equal comparison of +v+.
   class Comparison::GTE < Comparison
-    def to_s
-      ">= #{Connection.quote(v)}"
+    def to_sql
+      [">= ?", v]
     end
 
     def inverse

@@ -77,12 +77,12 @@ module Oedipus
       raise NotImplementedError, "Comparison#inverse must be defined by subclasses"
     end
 
-    # Represent the comparison as a string.
+    # Represent the comparison as SQL arguments.
     #
-    # @return [String]
-    #   an expression to compare a LHS against v
-    def to_s
-      raise NotImplementedError, "Comparison#to_s must be defined by subclasses"
+    # @return [Array]
+    #   an SQL expression to compare a LHS against v
+    def to_sql
+      raise NotImplementedError, "Comparison#to_sql must be defined by subclasses"
     end
   end
 end

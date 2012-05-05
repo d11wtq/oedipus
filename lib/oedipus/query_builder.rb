@@ -29,12 +29,16 @@ module Oedipus
     # @return [String]
     #   a SphinxQL query
     def select(query, filters)
+      where, *bind_values = conditions(query, filters)
       [
-        from(filters),
-        conditions(query, filters),
-        order_by(filters),
-        limits(filters)
-      ].join(" ")
+        [
+          from(filters),
+          where,
+          order_by(filters),
+          limits(filters)
+        ].join(" "),
+        *bind_values
+      ]
     end
 
     # Build a SphinxQL query to insert the record identified by +id+ with the given attributes.
@@ -62,11 +66,15 @@ module Oedipus
     # @return [String]
     #   the SphinxQL to update the record
     def update(id, attributes)
+      set_attrs, *bind_values = update_attributes(attributes)
       [
-        "UPDATE #{@index_name} SET",
-        update_attributes(attributes),
-        "WHERE id = #{Connection.quote(id)}"
-      ].join(" ")
+        [
+          "UPDATE #{@index_name} SET",
+          set_attrs,
+          "WHERE id = ?"
+        ].join(" "),
+        *bind_values.push(id)
+      ]
     end
 
     # Build a SphinxQL query to replace the record identified by +id+ with the given attributes.
@@ -91,10 +99,12 @@ module Oedipus
     # @return [String]
     #   the SphinxQL to delete the record
     def delete(id)
-      "DELETE FROM #{@index_name} WHERE id = #{Connection.quote(id)}"
+      ["DELETE FROM #{@index_name} WHERE id = ?", id]
     end
 
     private
+
+    RESERVED = [:attrs, :limit, :offset, :order]
 
     def fields(filters)
       filters.fetch(:attrs, [:*]).dup.tap do |fields|
@@ -114,32 +124,45 @@ module Oedipus
     end
 
     def into(type, id, attributes)
+      attrs, values = attributes.inject([[:id], [id]]) do |(a, b), (k, v)|
+        [a.push(k), b.push(v)]
+      end
+
       [
-        type,
-        "INTO #{@index_name}",
-        "(#{([:id] + attributes.keys).join(', ')})",
-        "VALUES",
-        "(#{([id] + attributes.values).map { |v| Connection.quote(v) }.join(', ')})"
-      ].join(" ")
+        [
+          type,
+          "INTO #{@index_name}",
+          "(#{attrs.join(', ')})",
+          "VALUES",
+          "(#{(['?'] * attrs.size).join(', ')})"
+        ].join(" "),
+        *values
+      ]
     end
 
     def conditions(query, filters)
-      exprs = []
-      exprs << "MATCH(#{Connection.quote(query)})" unless query.empty?
-      exprs += attribute_conditions(filters)
-      "WHERE " << exprs.join(" AND ") if exprs.any?
+      sql = []
+      sql << ["MATCH(?)", query] unless query.empty?
+      sql.push(*attribute_conditions(filters))
+
+      exprs, bind_values = sql.inject([[], []]) do |(strs, values), v|
+        [strs.push(v.shift), values.push(*v)]
+      end
+
+      ["WHERE " << exprs.join(" AND "), *bind_values] if exprs.any?
     end
 
     def attribute_conditions(filters)
-      filters \
-        .reject { |k, v| [:attrs, :limit, :offset, :order].include?(k.to_sym) } \
-        .map    { |k, v| "#{k} #{Comparison.of(v)}" }
+      filters.reject{ |k, v| RESERVED.include?(k.to_sym) }.map do |k, v|
+        Comparison.of(v).to_sql.tap { |c| c[0].insert(0, "#{k} ") }
+      end
     end
 
     def update_attributes(attributes)
-      attributes \
-        .map    { |k, v| "#{k} = #{Connection.quote(v)}" } \
-        .join(", ")
+      [
+        attributes.keys.map{ |k| "#{k} = ?" }.join(", "),
+        *attributes.values
+      ]
     end
 
     def order_by(filters)

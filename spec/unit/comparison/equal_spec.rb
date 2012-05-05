@@ -13,10 +13,10 @@ describe Oedipus::Comparison::Equal do
   let(:comparison) { Oedipus::Comparison::Equal.new('test') }
 
   it "draws as = v" do
-    comparison.to_s.should == "= 'test'"
+    comparison.to_sql.should == ["= ?", "test"]
   end
 
   it "inverses as != v" do
-    comparison.inverse.to_s.should == "!= 'test'"
+    comparison.inverse.to_sql.should == ["!= ?", "test"]
   end
 end

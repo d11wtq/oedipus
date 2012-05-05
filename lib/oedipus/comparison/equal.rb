@@ -10,8 +10,8 @@
 module Oedipus
   # Equality comparison of value.
   class Comparison::Equal < Comparison
-    def to_s
-      "= #{Connection.quote(v)}"
+    def to_sql
+      ["= ?", v]
     end
 
     def inverse

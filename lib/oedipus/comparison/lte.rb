@@ -10,8 +10,8 @@
 module Oedipus
   # Less than or equal comparison of +v+.
   class Comparison::LTE < Comparison
-    def to_s
-      "<= #{Connection.quote(v)}"
+    def to_sql
+      ["<= ?", v]
     end
 
     def inverse

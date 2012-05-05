@@ -12,48 +12,6 @@ module Oedipus
   #
   # Currently this class wraps a native mysql extension.
   class Connection
-    class << self
-      # Quote a value (of any type) for use in SphinxQL.
-      #
-      # @param [Object] v
-      #   the value to quote
-      #
-      # @return [Object]
-      #   the safe value
-      #
-      # Note that single quotes are added to strings.
-      def quote(v)
-        require "bigdecimal" unless defined? BigDecimal
-        case v
-        when BigDecimal, Rational, Complex
-          v.to_f
-        when Numeric
-          v
-        else
-          "'#{escape_str(v.to_s)}'"
-        end
-      end
-
-      # Escape a string, without adding enclosing quotes.
-      #
-      # @param [String] str
-      #   the unsafe input string
-      #
-      # @return [String]
-      #   a safe string for use in SphinxQL
-      def escape_str(str)
-        str.gsub(/[\0\n\r\\\'\"\x1a]/) do |s|
-          case s
-          when "\0"   then "\\0"
-          when "\n"   then "\\n"
-          when "\r"   then "\\r"
-          when "\x1a" then "\\Z"
-          else "\\#{s}"
-          end
-        end
-      end
-    end
-
     # Instantiate a new Connection to a SphinxQL host.
     #
     # @param [String] server

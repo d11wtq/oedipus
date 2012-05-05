@@ -10,8 +10,8 @@
 module Oedipus
   # IN comparison of +v+.
   class Comparison::In < Comparison
-    def to_s
-      "IN (#{v.map { |o| Connection.quote(o)}.join(', ')})"
+    def to_sql
+      ["IN (#{v.map{'?'}.join(', ')})", *v]
     end
 
     def inverse

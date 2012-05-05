@@ -10,8 +10,8 @@
 module Oedipus
   # Negation comparison of value.
   class Comparison::NotEqual < Comparison
-    def to_s
-      "!= #{Connection.quote(v)}"
+    def to_sql
+      ["!= ?", v]
     end
 
     def inverse

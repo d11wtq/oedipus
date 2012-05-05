@@ -10,8 +10,8 @@
 module Oedipus
   # NOT IN comparison of +v+.
   class Comparison::NotIn < Comparison
-    def to_s
-      "NOT IN (#{v.map { |o| Connection.quote(o)}.join(', ')})"
+    def to_sql
+      ["NOT IN (#{v.map{'?'}.join(', ')})", *v]
     end
 
     def inverse

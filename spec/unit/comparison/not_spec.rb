@@ -27,11 +27,11 @@ describe Oedipus::Comparison::In do
     let(:comparison) { Oedipus::Comparison::Not.new(original) }
 
     it "draws as the inverse of the comparison" do
-      comparison.to_s.should == original.inverse.to_s
+      comparison.to_sql.should == original.inverse.to_sql
     end
 
     it "inverses as the original" do
-      comparison.inverse.to_s == original.to_s
+      comparison.inverse.to_sql == original.to_sql
     end
   end
 end
