@@ -99,12 +99,15 @@ module Oedipus
     # @param [String] sql
     #   one or more SphinxQL statements, separated by semicolons
     #
+    # @param [Object...] bind_values
+    #   values to be substituted in place of '?' in the query
+    #
     # @return [Array]
     #   an array of arrays, containing the returned records
     #
     # Note that SphinxQL does not support prepared statements.
-    def multi_query(sql)
-      @pool.acquire { |conn| conn.query(sql) }
+    def multi_query(sql, *bind_values)
+      @pool.acquire { |conn| conn.query(sql, *bind_values) }
     end
 
     # Execute a single read query.
@@ -112,12 +115,15 @@ module Oedipus
     # @param [String] sql
     #   a single SphinxQL statement
     #
+    # @param [Object...] bind_values
+    #   values to be substituted in place of '?' in the query
+    #
     # @return [Array]
     #   an array of Hashes containing the matched records
     #
     # Note that SphinxQL does not support prepared statements.
-    def query(sql)
-      @pool.acquire { |conn| conn.query(sql).first }
+    def query(sql, *bind_values)
+      @pool.acquire { |conn| conn.query(sql, *bind_values).first }
     end
 
     # Execute a non-read query.
@@ -125,12 +131,15 @@ module Oedipus
     # @param [String] sql
     #   a SphinxQL query, such as INSERT or REPLACE
     #
+    # @param [Object...] bind_values
+    #   values to be substituted in place of '?' in the query
+    #
     # @return [Fixnum]
     #   the number of affected rows
     #
     # Note that SphinxQL does not support prepared statements.
-    def execute(sql)
-      @pool.acquire { |conn| conn.execute(sql) }
+    def execute(sql, *bind_values)
+      @pool.acquire { |conn| conn.execute(sql, *bind_values) }
     end
 
     private

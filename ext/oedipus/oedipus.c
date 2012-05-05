@@ -85,16 +85,23 @@ static VALUE odp_close(VALUE self) {
   return Qtrue;
 }
 
-static VALUE odp_execute(VALUE self, VALUE sql) {
+static VALUE odp_execute(int argc, VALUE * args, VALUE self) {
+  VALUE       sql;
   OdpMysql  * conn;
 
-  Check_Type(sql, T_STRING);
+  if (0 == argc) {
+    rb_raise(rb_eArgError, "Wrong number of arguments (0 for 1..*)");
+  }
+
+  Check_Type(args[0], T_STRING);
 
   Data_Get_Struct(self, OdpMysql, conn);
 
   if (!conn->connected) {
     odp_raise(self, "Cannot execute query on a closed connection");
   }
+
+  sql = odp_replace_bind_values(conn, args[0], &args[1], argc - 1);
 
   if (mysql_query(conn->ptr, RSTRING_PTR(sql))) {
     odp_raise(self, "Failed to execute statement(s)");
@@ -103,7 +110,8 @@ static VALUE odp_execute(VALUE self, VALUE sql) {
   return INT2NUM(mysql_affected_rows(conn->ptr));
 }
 
-static VALUE odp_query(VALUE self, VALUE sql) {
+static VALUE odp_query(int argc, VALUE * args, VALUE self) {
+  VALUE           sql;
   OdpMysql      * conn;
   MYSQL_RES     * rs;
   int             status;
@@ -116,13 +124,19 @@ static VALUE odp_query(VALUE self, VALUE sql) {
   VALUE           hash;
   VALUE           results;
 
-  Check_Type(sql, T_STRING);
+  if (0 == argc) {
+    rb_raise(rb_eArgError, "Wrong number of arguments (0 for 1..*)");
+  }
+
+  Check_Type(args[0], T_STRING);
 
   Data_Get_Struct(self, OdpMysql, conn);
 
   if (!conn->connected) {
     odp_raise(self, "Cannot execute query on a closed connection");
   }
+
+  sql = odp_replace_bind_values(conn, args[0], &args[1], argc - 1);
 
   if (mysql_query(conn->ptr, RSTRING_PTR(sql))) {
     odp_raise(self, "Failed to execute statement(s)");
@@ -175,6 +189,50 @@ static void odp_free(OdpMysql * conn) {
   free(conn);
 }
 
+static VALUE odp_replace_bind_values(OdpMysql * conn, VALUE sql, VALUE * bind_values, int num_values) {
+  int           i;
+  VALUE         v;
+  VALUE         q;
+  VALUE         idx;
+
+  q   = rb_str_new("?", 1);
+  sql = rb_funcall(sql, rb_intern("dup"), 0);
+
+  // FIXME: Do a real lexical scan of the string, to avoid replacing '?' inside comments/strings
+
+  for (i = 0; i < num_values; ++i) {
+    if ((idx = rb_funcall(sql, rb_intern("index"), 1, q)) == Qnil) {
+      break;
+    }
+
+    v = bind_values[i];
+
+    if (ODP_KIND_OF_P(v, rb_cInteger)) {
+      ODP_STR_SUB(sql, idx, ODP_TO_S(v));
+    } else if (ODP_KIND_OF_P(v, rb_cNumeric)) {
+      ODP_STR_SUB(sql, idx, ODP_TO_S(ODP_TO_F(v)));
+    } else {
+      if (T_STRING != TYPE(v)) {
+        v = ODP_TO_S(v);
+      }
+
+      {
+        char          * v_ptr = RSTRING_PTR(v);
+        unsigned long   v_len = strlen(v_ptr);
+
+        char escaped_str [v_len * 2 + 1];
+        char quoted_str  [v_len * 2 + 3];
+
+        mysql_real_escape_string(conn->ptr, escaped_str, v_ptr, v_len);
+        sprintf(quoted_str, "'%s'", escaped_str);
+        ODP_STR_SUB(sql, idx, rb_str_new2(quoted_str));
+      }
+    }
+  }
+
+  return sql;
+}
+
 static VALUE odp_cast_value(MYSQL_FIELD f, char * v, unsigned long len) {
   short  s;
   int    i;
@@ -225,16 +283,19 @@ static VALUE odp_cast_value(MYSQL_FIELD f, char * v, unsigned long len) {
 /* -- Extension initialization -- */
 
 void Init_oedipus(void) {
+  VALUE mOedipus;
+  VALUE cMysql;
+
   rb_require("bigdecimal");
 
-  VALUE mOedipus = rb_define_module("Oedipus");
-  VALUE cMysql   = rb_define_class_under(mOedipus, "Mysql", rb_cObject);
+  mOedipus = rb_define_module("Oedipus");
+  cMysql   = rb_define_class_under(mOedipus, "Mysql", rb_cObject);
 
   rb_define_method(cMysql, "initialize", odp_initialize, 2);
   rb_define_method(cMysql, "open",       odp_open,       0);
   rb_define_method(cMysql, "close",      odp_close,      0);
-  rb_define_method(cMysql, "execute",    odp_execute,    1);
-  rb_define_method(cMysql, "query",      odp_query,      1);
+  rb_define_method(cMysql, "execute",    odp_execute,   -1);
+  rb_define_method(cMysql, "query",      odp_query,     -1);
 
   rb_define_singleton_method(cMysql, "new",  odp_new, 2);
 }
