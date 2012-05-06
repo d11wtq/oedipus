@@ -214,7 +214,11 @@ static VALUE odp_replace_bind_values(OdpMysql * conn, VALUE sql, VALUE * bind_va
   escaped_sql_len = sql_len;
 
   for (i = 0; i < num_values; ++i) {
-    if (T_STRING == TYPE(bind_values[i])) {
+    if (Qtrue == bind_values[i]) {
+      str_values[i] = (char *) "1";
+    } else if (Qfalse == bind_values[i]) {
+      str_values[i] = (char *) "0";
+    } else if (T_STRING == TYPE(bind_values[i])) {
       str_values[i] = RSTRING_PTR(bind_values[i]);
     } else if (ODP_KIND_OF_P(bind_values[i], rb_cNumeric) && !(ODP_KIND_OF_P(bind_values[i], rb_cInteger))) {
       str_values[i] = RSTRING_PTR(ODP_TO_S(ODP_TO_F(bind_values[i])));
@@ -242,7 +246,7 @@ static VALUE odp_replace_bind_values(OdpMysql * conn, VALUE sql, VALUE * bind_va
         break;
       }
 
-      if (!(ODP_KIND_OF_P(bind_values[i], rb_cNumeric))) {
+      if (!(ODP_KIND_OF_P(bind_values[i], rb_cNumeric) || T_TRUE == TYPE(bind_values[i]) || T_FALSE == TYPE(bind_values[i]))) {
         // would prefer to use stack allocation, but it segfaults with larger (megabytes) values
         char * escaped_str = (char *) malloc(escaped_value_lengths[i]);
         char * quoted_str  = (char *) malloc(escaped_value_lengths[i]);

@@ -140,6 +140,14 @@ describe Oedipus::Connection do
       conn.execute("REPLACE INTO posts_rt (id, title, state, body) VALUES (?, 'question?', 'other?', ?)", 1, nil)
     end
 
+    it "handles true" do
+      conn.execute("REPLACE INTO posts_rt (id, views) VALUES (?, ?)", 1, true)
+    end
+
+    it "handles false" do
+      conn.execute("REPLACE INTO posts_rt (id, views) VALUES (?, ?)", 1, false)
+    end
+
     it "handles really long strings" do
       conn.execute("REPLACE INTO posts_rt (id, title, state, body) VALUES (?, 'question?', 'other?', ?)", 1, 'a' * 2_000_000)
     end
