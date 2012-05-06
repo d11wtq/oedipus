@@ -120,5 +120,20 @@ describe Oedipus::Connection do
     it "accepts string bind parameters" do
       conn.execute("REPLACE INTO posts_rt (id, title) VALUES (?, ?)", 1, "an example with `\"this (quoted) string\\'")
     end
+
+    it "doesn't confuse bind parameters in replacements" do
+      conn.execute("REPLACE INTO posts_rt (id, title, body) VALUES (?, ?, ?)", 1, "question?", "I think not")
+    end
+
+    it "ignores bind markers inside strings" do
+      conn.execute("REPLACE INTO posts_rt (id, title, state, body) VALUES (?, 'question?', 'other?', ?)", 1, "I think not")
+    end
+
+    it "ignores bind markers inside comments" do
+      conn.execute <<-SQL, 1, "A string"
+      /* is this a comment? *//* another comment ? */
+      REPLACE INTO posts_rt (id, title) VALUES (?, ?)
+      SQL
+    end
   end
 end

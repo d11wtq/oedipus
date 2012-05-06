@@ -8,6 +8,7 @@
  */
 
 #include "oedipus.h"
+#include "lexing.h"
 
 /* -- Public methods -- */
 
@@ -190,47 +191,71 @@ static void odp_free(OdpMysql * conn) {
 }
 
 static VALUE odp_replace_bind_values(OdpMysql * conn, VALUE sql, VALUE * bind_values, int num_values) {
-  int           i;
-  VALUE         v;
-  VALUE         q;
-  VALUE         idx;
+  // FIXME: Refactor this whole method, somehow... use a struct instead of a gazillion variables, so other functions can be called
+  char          * sql_str;
+  unsigned long   sql_len;
+  char          * str_values[num_values];
+  unsigned long   escaped_value_lengths[num_values];
+  unsigned long   escaped_sql_len;
+  int             i;
 
-  q   = rb_str_new("?", 1);
-  sql = rb_funcall(sql, rb_intern("dup"), 0);
-
-  // FIXME: Do a real lexical scan of the string, to avoid replacing '?' inside comments/strings
+  sql_str         = RSTRING_PTR(sql);
+  sql_len         = strlen(sql_str);
+  escaped_sql_len = sql_len;
 
   for (i = 0; i < num_values; ++i) {
-    if ((idx = rb_funcall(sql, rb_intern("index"), 1, q)) == Qnil) {
-      break;
-    }
-
-    v = bind_values[i];
-
-    if (ODP_KIND_OF_P(v, rb_cInteger)) {
-      ODP_STR_SUB(sql, idx, ODP_TO_S(v));
-    } else if (ODP_KIND_OF_P(v, rb_cNumeric)) {
-      ODP_STR_SUB(sql, idx, ODP_TO_S(ODP_TO_F(v)));
+    if (T_STRING == TYPE(bind_values[i])) {
+      str_values[i] = RSTRING_PTR(bind_values[i]);
+    } else if (ODP_KIND_OF_P(bind_values[i], rb_cNumeric) && !(ODP_KIND_OF_P(bind_values[i], rb_cInteger))) {
+      str_values[i] = RSTRING_PTR(ODP_TO_S(ODP_TO_F(bind_values[i])));
     } else {
-      if (T_STRING != TYPE(v)) {
-        v = ODP_TO_S(v);
-      }
-
-      {
-        char          * v_ptr = RSTRING_PTR(v);
-        unsigned long   v_len = strlen(v_ptr);
-
-        char escaped_str [v_len * 2 + 1];
-        char quoted_str  [v_len * 2 + 3];
-
-        mysql_real_escape_string(conn->ptr, escaped_str, v_ptr, v_len);
-        sprintf(quoted_str, "'%s'", escaped_str);
-        ODP_STR_SUB(sql, idx, rb_str_new2(quoted_str));
-      }
+      str_values[i] = RSTRING_PTR(ODP_TO_S(bind_values[i]));
     }
+
+    escaped_value_lengths[i] = (strlen(str_values[i]) * 2 + 3);
+    escaped_sql_len          += escaped_value_lengths[i];
   }
 
-  return sql;
+  {
+    char   escaped_sql_str[escaped_sql_len];
+    char * sql_end;
+    char * dest;
+
+    sql_end = sql_str + sql_len;
+    dest    = escaped_sql_str;
+
+    for (i = 0; i < num_values; ++i) {
+      char * str = str_values[i];
+      char   len = strlen(str);
+      long   pos = 0;
+
+      if (!(odp_scan_until_marker(&sql_str, &dest, sql_end - sql_str))) {
+        break;
+      }
+
+      if (T_STRING == TYPE(bind_values[i])) {
+        char escaped_str[escaped_value_lengths[i]];
+        char quoted_str[escaped_value_lengths[i]];
+
+        mysql_real_escape_string(conn->ptr, escaped_str, str, len);
+        sprintf(quoted_str, "'%s'", escaped_str);
+
+        str = quoted_str;
+        len = strlen(quoted_str);
+      }
+
+      for (pos = 0; pos < len; ++pos) {
+        *(dest++) = str[pos];
+      }
+    }
+
+    // copy remainder
+    for (; sql_str < sql_end; ++sql_str) {
+      *(dest++) = *sql_str;
+    }
+
+    return rb_str_new(escaped_sql_str, dest - escaped_sql_str);
+  }
 }
 
 static VALUE odp_cast_value(MYSQL_FIELD f, char * v, unsigned long len) {
