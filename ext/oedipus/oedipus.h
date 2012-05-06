@@ -14,7 +14,6 @@
 #define ODP_TO_S(v)                  rb_funcall(v, rb_intern("to_s"), 0)
 #define ODP_TO_F(n)                  rb_funcall(n, rb_intern("to_f"), 0)
 #define ODP_KIND_OF_P(v, type)       (rb_funcall(v, rb_intern("kind_of?"), 1, type) == Qtrue)
-#define ODP_STR_SUB(s, pos, replace) rb_funcall(s, rb_intern("[]="), 2, pos, replace)
 
 /*! Internal struct used to reference a mysql connection */
 typedef struct {
