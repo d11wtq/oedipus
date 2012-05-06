@@ -233,7 +233,7 @@ static VALUE odp_replace_bind_values(OdpMysql * conn, VALUE sql, VALUE * bind_va
         break;
       }
 
-      if (T_STRING == TYPE(bind_values[i])) {
+      if (!(ODP_KIND_OF_P(bind_values[i], rb_cNumeric))) {
         char escaped_str[escaped_value_lengths[i]];
         char quoted_str[escaped_value_lengths[i]];
 

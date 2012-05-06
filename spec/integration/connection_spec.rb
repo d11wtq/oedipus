@@ -135,5 +135,9 @@ describe Oedipus::Connection do
       REPLACE INTO posts_rt (id, title) VALUES (?, ?)
       SQL
     end
+
+    it "handles nil" do
+      conn.execute("REPLACE INTO posts_rt (id, title, state, body) VALUES (?, 'question?', 'other?', ?)", 1, nil)
+    end
   end
 end
