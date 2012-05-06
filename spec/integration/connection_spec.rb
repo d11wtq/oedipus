@@ -139,5 +139,9 @@ describe Oedipus::Connection do
     it "handles nil" do
       conn.execute("REPLACE INTO posts_rt (id, title, state, body) VALUES (?, 'question?', 'other?', ?)", 1, nil)
     end
+
+    it "handles really long strings" do
+      conn.execute("REPLACE INTO posts_rt (id, title, state, body) VALUES (?, 'question?', 'other?', ?)", 1, 'a' * 2_000_000)
+    end
   end
 end

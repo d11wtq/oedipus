@@ -7,6 +7,9 @@
  * See LICENSE file for details.
  */
 
+/*! Scans the entire string pointed to by src into the string pointed to by dest, advancing both pointers */
+int odp_scan_move_pointers(char ** src, char ** dest, long len);
+
 /*! Consume input from the string pointed to by sql_ptr, into the string pointed to by dest_ptr, until stop is reached (inclusive) */
 int odp_scan_until_char(char stop, char ** sql_ptr, char ** dest_ptr, unsigned long len);
 

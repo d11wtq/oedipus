@@ -190,6 +190,16 @@ static void odp_free(OdpMysql * conn) {
   free(conn);
 }
 
+int odp_scan_move_pointers(char ** src, char ** dest, long len) {
+  char * end = *src + len;
+
+  for (; *src < end; ++(*src)) {
+    *((*dest)++) = **src;
+  }
+
+  return 1;
+}
+
 static VALUE odp_replace_bind_values(OdpMysql * conn, VALUE sql, VALUE * bind_values, int num_values) {
   // FIXME: Refactor this whole method, somehow... use a struct instead of a gazillion variables, so other functions can be called
   char          * sql_str;
@@ -217,7 +227,7 @@ static VALUE odp_replace_bind_values(OdpMysql * conn, VALUE sql, VALUE * bind_va
   }
 
   {
-    char   escaped_sql_str[escaped_sql_len];
+    char   escaped_sql_str[escaped_sql_len]; // FIXME: Possibly use the heap
     char * sql_end;
     char * dest;
 
@@ -226,33 +236,32 @@ static VALUE odp_replace_bind_values(OdpMysql * conn, VALUE sql, VALUE * bind_va
 
     for (i = 0; i < num_values; ++i) {
       char * str = str_values[i];
-      char   len = strlen(str);
-      long   pos = 0;
+      long   len = strlen(str);
 
       if (!(odp_scan_until_marker(&sql_str, &dest, sql_end - sql_str))) {
         break;
       }
 
       if (!(ODP_KIND_OF_P(bind_values[i], rb_cNumeric))) {
-        char escaped_str[escaped_value_lengths[i]];
-        char quoted_str[escaped_value_lengths[i]];
+        // would prefer to use stack allocation, but it segfaults with larger (megabytes) values
+        char * escaped_str = (char *) malloc(escaped_value_lengths[i]);
+        char * quoted_str  = (char *) malloc(escaped_value_lengths[i]);
 
         mysql_real_escape_string(conn->ptr, escaped_str, str, len);
         sprintf(quoted_str, "'%s'", escaped_str);
-
         str = quoted_str;
-        len = strlen(quoted_str);
-      }
 
-      for (pos = 0; pos < len; ++pos) {
-        *(dest++) = str[pos];
+        odp_scan_move_pointers(&str, &dest, strlen(str));
+
+        free(quoted_str);
+        free(escaped_str);
+      } else {
+        odp_scan_move_pointers(&str, &dest, len);
       }
     }
 
     // copy remainder
-    for (; sql_str < sql_end; ++sql_str) {
-      *(dest++) = *sql_str;
-    }
+    odp_scan_move_pointers(&sql_str, &dest, sql_end - sql_str);
 
     return rb_str_new(escaped_sql_str, dest - escaped_sql_str);
   }
