@@ -376,11 +376,6 @@ To run the unit tests alone, without the need for Sphinx:
 If you have made changes to the C extension, those changes will be compiled and installed
 (to the lib/ directory) before the specs are run.
 
-You may also compile the C extension and run the specs separately, if you prefer:
-
-    bundle exec rake compile
-    bundle exec rspec spec/unit/
-
 ### Footnotes
 
   [1]: In practice I find such an abstraction not to be very useful, as it assumes a single-server setup
