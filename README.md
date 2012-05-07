@@ -79,7 +79,6 @@ sphinx[:articles].update(7, views: 103)
 
 ``` ruby
 sphinx[:articles].delete(7)
-# => true
 ```
 
 ### Fetching a known document (by ID)
