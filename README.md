@@ -25,6 +25,14 @@ Oedipus does not (yet) provide wrappers for indexing that data via ruby [1].
   * sphinx >= 2.0.2
   * mysql dev libs >= 4.1
 
+## Installation
+
+Via rubygems:
+
+```
+gem install oedipus
+```
+
 ## Usage
 
 The following features are all currently implemented.
