@@ -241,8 +241,8 @@ A faceted search takes a base query and a set of additional queries that are
 variations on it.  Oedipus makes this simple by allowing your facets to inherit
 from the base query.
 
-Oedipus allows you to replace '%{query}' in your facets with whatever was in the
-original query.  This can be useful if you want to provide facets that only
+Oedipus allows you to replace `'%{query}'` in your facets with whatever was in
+the original query.  This can be useful if you want to provide facets that only
 perform the search in the title of the document (`"@title (%{query})"`) for
 example.
 
