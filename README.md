@@ -227,8 +227,8 @@ attribute differently.
 Note that Sphinx applies a limit of 20 by default, so you probably want to specify
 a limit yourself.  You are bound by your `max_matches` setting in sphinx.conf.
 
-Note that the meta data will still indicate the actual number of results that matched;
-you simply get a smaller collection of materialized records.
+The meta data will still indicate the actual number of results that matched; you simply
+get a smaller collection of materialized records.
 
 ``` ruby
 sphinx[:articles].search("bobcats", limit: 50)
