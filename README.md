@@ -21,14 +21,9 @@ Oedipus does not (yet) provide wrappers for indexing that data via ruby [1].
 
 ## Dependencies
 
-  * ruby (>= 1.9)
-  * sphinx (>= 2.0.2)
-  * mysql client development libraries (>= 4.1)
-
-The gem builds a small (tiny) native extension for interfacing with mysql, as
-existing gems either did not support multi-queries, or were too flaky
-(i.e. ruby-mysql).  I will add a pure-ruby option in due course (it requires
-implementing a relatively small subset of the mysql 4.1 protocol).
+  * ruby >= 1.9
+  * sphinx >= 2.0.2
+  * mysql dev libs >= 4.1
 
 ## Usage
 
