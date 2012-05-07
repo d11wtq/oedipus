@@ -93,12 +93,6 @@ record = sphinx[:articles].fetch(7)
 
 You perform queries by invoking `#search` on the index.
 
-Oedipus makes no attempt to provide an abstraction layer for the fulltext
-query itself.  I believe this would not be flexible enough.  Sphinx fulltext
-queries are extremely featureful, very dense and concise; a ruby solution
-would only be lengthier and harder to understand, IMHO.  Perhaps such an
-abstraction could be provided by a separate gem.
-
 
 ``` ruby
 results = sphinx[:articles].search("badgers", limit: 2)
