@@ -1,7 +1,7 @@
 # Oedipus: Sphinx 2 Search Client for Ruby
 
 Oedipus is a client for the Sphinx search engine (>= 2.0.2), with support for
-real-time indexes and multi and/or multi-dimensional faceted searches.
+real-time indexes and multi and multi-dimensional faceted searches.
 
 It is not a clone of the PHP API, rather it is written from the ground up,
 wrapping the SphinxQL API offered by searchd.  Nor is it a plugin for
