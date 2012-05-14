@@ -49,6 +49,21 @@ sphinx = Oedipus.connect('127.0.0.1:9306') # sphinxql host
 will try to use a UNIX socket instead of a TCP connection, which Sphinx doesn't
 currently support.
 
+Connections can be re-used by calling `Oedipus.connection` once connected.
+
+``` ruby
+sphinx = Oedipus.connection
+```
+
+If you need to manage multiple connections, you may specify names for each
+connection.
+
+``` ruby
+Oedipus.connect("other-host.tld:9306", :other)
+
+sphinx = Oedipus.connection(:other)
+```
+
 ### Inserting (real-time indexes)
 
 ``` ruby

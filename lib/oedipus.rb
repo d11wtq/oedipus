@@ -30,30 +30,11 @@ require "oedipus/query_builder"
 require "oedipus/connection_error"
 require "oedipus/connection"
 require "oedipus/connection/pool"
+require "oedipus/connection/registry"
 
 require "oedipus/index"
 
 module Oedipus
   extend Comparison::Shortcuts
-
-  class << self
-    # Connect to Sphinx running SphinxQL.
-    #
-    # @example
-    #   c = Oedipus.connect("localhost:9306")
-    #   c = Oedipus.connect(host: "localhost", port: 9306)
-    #
-    # @param [String] server
-    #   a 'hostname:port' string
-    #
-    # @param [Hash] options
-    #   a Hash with :host and :port keys
-    #
-    # @return [Connection]
-    #   a client connected to SphinxQL
-    def connect(options)
-      # TODO: Add pooling
-      Connection.new(options)
-    end
-  end
+  extend Connection::Registry
 end
