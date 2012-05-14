@@ -55,6 +55,10 @@ Connections can be re-used by calling `Oedipus.connection` once connected.
 sphinx = Oedipus.connection
 ```
 
+If you're using Oedipus in a Rails application, you may wish to call `connect`
+inside an initializer and then obtain that connection in your application, by
+calling `connection`.
+
 If you need to manage multiple connections, you may specify names for each
 connection.
 
