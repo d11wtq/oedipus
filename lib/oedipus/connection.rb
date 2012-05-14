@@ -49,6 +49,8 @@ module Oedipus
       Index.new(index_name, self)
     end
 
+    alias_method :index, :[]
+
     # Execute one or more queries in a batch.
     #
     # Queries should be separated by semicolons.
