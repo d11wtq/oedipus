@@ -70,6 +70,30 @@ module Oedipus
         release(instance)
       end
 
+      # Dispose all connections in the pool.
+      #
+      # Waits until all connections have finished processing current queries
+      # and then releases them.
+      def dispose
+        begin
+          @lock.synchronize do
+            while instance = @available.pop
+              instance.close
+            end
+
+            @condition.wait(@lock) if @used.size > 0
+          end
+        end until empty?
+      end
+
+      # Returns true if the pool is currently empty.
+      #
+      # @return [Boolean]
+      #   true if no connections are pooled, false otherwise
+      def empty?
+        @lock.synchronize { @used.size == 0 && @available.size == 0 }
+      end
+
       private
 
       def release(instance)

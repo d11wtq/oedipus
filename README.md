@@ -381,6 +381,17 @@ results = sphinx[:articles].multi_search(
 # }
 ```
 
+## Disconnecting from Sphinx
+
+Oedipus will automatically close connections that are idle, so you don't,
+generally speaking, need to close connections manually. However, before
+forking children, for example, it is important to dispose of any open
+resources to avoid sharing resources across processes.  To do this:
+
+``` ruby
+Oedipus.connections.each { |key, conn| conn.close }
+```
+
 ## Running the specs
 
 There are both unit tests and integration tests in the specs/ directory.  By default they

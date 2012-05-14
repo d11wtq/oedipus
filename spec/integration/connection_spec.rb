@@ -152,4 +152,12 @@ describe Oedipus::Connection do
       conn.execute("REPLACE INTO posts_rt (id, title, state, body) VALUES (?, 'question?', 'other?', ?)", 1, 'a' * 2_000_000)
     end
   end
+
+  describe "#close" do
+    before(:each) { conn.close }
+
+    it "disposes the internal pool" do
+      conn.instance_variable_get(:@pool).should be_empty
+    end
+  end
 end

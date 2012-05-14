@@ -102,6 +102,14 @@ module Oedipus
       @pool.acquire { |conn| conn.execute(sql, *bind_values) }
     end
 
+    # Disconnect from the remote host.
+    #
+    # There is no need to explicitly re-connect after invoking this;
+    # connections are re-established as needed.
+    def close
+      @pool.dispose
+    end
+
     private
 
     def assert_valid_pool
