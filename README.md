@@ -42,8 +42,12 @@ The following features are all currently implemented.
 ``` ruby
 require "oedipus"
 
-sphinx = Oedipus.connect('localhost:9306') # sphinxql host
+sphinx = Oedipus.connect('127.0.0.1:9306') # sphinxql host
 ```
+
+**NOTE:** Don't connect to the named host 'localhost', since the MySQL library
+will try to use a UNIX socket instead of a TCP connection, which Sphinx doesn't
+currently support.
 
 ### Inserting (real-time indexes)
 
