@@ -8,28 +8,21 @@
 ##
 
 require "spec_helper"
-require "oedipus/rspec/test_harness"
+require "oedipus/rspec/test_rig"
 
 describe Oedipus::Connection do
-  include Oedipus::RSpec::TestHarness
+  include_context "oedipus test rig"
+  include_context "oedipus posts_rt"
 
-  before(:all) do
-    set_data_dir File.expand_path("../../data", __FILE__)
-    set_searchd  ENV["SEARCHD"]
-    start_searchd
-  end
-
-  after(:all) { stop_searchd }
-
-  before(:each) { empty_indexes }
-
-  let(:conn) { Oedipus::Connection.new(searchd_host) }
+  let(:conn) { Oedipus::Connection.new(connection.options) }
 
   describe "#initialize" do
     context "with a hosname:port string" do
       context "on successful connection" do
         it "returns the connection" do
-          Oedipus::Connection.new(searchd_host.values.join(":")).should be_a_kind_of(Oedipus::Connection)
+          Oedipus::Connection.new(
+            "#{connection.options[:host]}:#{connection.options[:port]}"
+          ).should be_a_kind_of(Oedipus::Connection)
         end
       end
 
@@ -45,7 +38,7 @@ describe Oedipus::Connection do
     context "with an options Hash" do
       context "on successful connection" do
         it "returns the connection" do
-          Oedipus::Connection.new(searchd_host).should be_a_kind_of(Oedipus::Connection)
+          Oedipus::Connection.new(connection.options).should be_a_kind_of(Oedipus::Connection)
         end
       end
 

@@ -8,22 +8,13 @@
 ##
 
 require "spec_helper"
-require "oedipus/rspec/test_harness"
+require "oedipus/rspec/test_rig"
 
 describe Oedipus::Index do
-  include Oedipus::RSpec::TestHarness
+  include_context "oedipus test rig"
+  include_context "oedipus posts_rt"
 
-  before(:all) do
-    set_data_dir File.expand_path("../../data", __FILE__)
-    set_searchd  ENV["SEARCHD"]
-    start_searchd
-  end
-
-  after(:all) { stop_searchd }
-
-  before(:each) { empty_indexes }
-
-  let(:conn)     { Oedipus::Connection.new(searchd_host) }
+  let(:conn)     { connection }
   let(:index)    { Oedipus::Index.new(:posts_rt, conn) }
 
   describe "#insert" do
@@ -340,7 +331,7 @@ describe Oedipus::Index do
     end
 
     context "with overriding overriding fulltext queries" do
-      let(:results) do
+      let(:results) do # FIXME: Weird RSpec bug is not clearing the previous result, hence the ridiculous naming
         index.search(
           "badgers",
           facets: {

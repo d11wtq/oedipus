@@ -12,6 +12,8 @@ module Oedipus
   #
   # Currently this class wraps a native mysql extension.
   class Connection
+    attr_reader :options
+
     # Instantiate a new Connection to a SphinxQL host.
     #
     # @param [String] server
@@ -24,18 +26,21 @@ module Oedipus
     #
     # The underlying implementation uses a thread-safe connection pool.
     def initialize(options)
-      options = options.kind_of?(String) ?
-        Hash[ [:host, :port].zip(options.split(":")) ] :
-        options
+      @options =
+        if options.kind_of?(String)
+          Hash[ [:host, :port].zip(options.split(":")) ]
+        else
+          options.dup
+        end.tap { |o| o[:port] = o[:port].to_i }
 
       @pool = Pool.new(
-        host: options[:host],
-        port: options[:port].to_i,
-        size: options.fetch(:pool_size, 8),
+        host: @options[:host],
+        port: @options[:port],
+        size: @options.fetch(:pool_size, 8),
         ttl:  60
       )
 
-      assert_valid_pool
+      assert_valid_pool unless @options[:verify] == false
     end
 
     # Acess a specific index for querying.

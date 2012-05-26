@@ -8,20 +8,11 @@
 ##
 
 require "spec_helper"
-require "oedipus/rspec/test_harness"
+require "oedipus/rspec/test_rig"
 
 describe Oedipus::Connection::Registry do
-  include Oedipus::RSpec::TestHarness
-
-  before(:all) do
-    set_data_dir File.expand_path("../../../data", __FILE__)
-    set_searchd  ENV["SEARCHD"]
-    start_searchd
-  end
-
-  after(:all) { stop_searchd }
-
-  before(:each) { empty_indexes }
+  include_context "oedipus test rig"
+  include_context "oedipus posts_rt"
 
   let(:registry) do
     Object.new.tap { |o| o.send(:extend, Oedipus::Connection::Registry) }
@@ -29,13 +20,13 @@ describe Oedipus::Connection::Registry do
 
   describe "#connect" do
     it "makes a new connection to a SphinxQL host" do
-      registry.connect(searchd_host).should be_a_kind_of(Oedipus::Connection)
+      registry.connect(connection.options).should be_a_kind_of(Oedipus::Connection)
     end
   end
 
   describe "#connection" do
     context "without a name" do
-      let(:conn) { registry.connect(searchd_host) }
+      let(:conn) { registry.connect(connection.options) }
 
       it "returns an existing connection" do
         conn.should equal registry.connection
@@ -43,7 +34,7 @@ describe Oedipus::Connection::Registry do
     end
 
     context "with a name" do
-      let(:conn) { registry.connect(searchd_host, :bob) }
+      let(:conn) { registry.connect(connection.options, :bob) }
 
       it "returns the named connection" do
         conn.should equal registry.connection(:bob)
