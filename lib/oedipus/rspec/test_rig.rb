@@ -98,15 +98,22 @@ shared_context "oedipus test rig" do
 
   def start_sphinx
     @pid = Process.spawn(
-      searchd, "--console", "-c", "#{data_dir}/sphinx.conf",
+      searchd, "-c", "#{data_dir}/sphinx.conf",
       out: "#{data_dir}/searchd.out",
       err: "#{data_dir}/searchd.err"
     )
-    sleep 1
+    Process.wait(@pid)
+    raise "Couldn't start sphinx" unless $? == 0
   end
 
   def stop_sphinx
-    Process.kill(:TERM, @pid) && Process.wait
+    @pid = Process.spawn(
+      searchd, "-c", "#{data_dir}/sphinx.conf", "--stopwait",
+      out: "#{data_dir}/searchd.out",
+      err: "#{data_dir}/searchd.err"
+    )
+    Process.wait(@pid)
+    raise "Couldn't stop sphinx" unless $? == 0
   end
 
   def clean_data_dir
