@@ -220,16 +220,12 @@ module Oedipus
         raise ArgumentError, "Argument must be a Hash of named queries (#{queries.class} given)"
       end
 
-      stmts       = []
-      bind_values = []
-
+      rs = []
       queries.each do |key, args|
         str, *values = @builder.select(*extract_query_data(args))
-        stmts.push(str, "SHOW META")
-        bind_values.push(*values)
+        rs.push @conn.query("#{str};", *values)
+        rs.push @conn.query("SHOW META;")
       end
-
-      rs = @conn.multi_query(stmts.join(";\n"), *bind_values)
 
       Hash[].tap do |result|
         queries.keys.each do |key|

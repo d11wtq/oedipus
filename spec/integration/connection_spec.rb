@@ -63,11 +63,11 @@ describe Oedipus::Connection do
       conn.query("SELECT * FROM posts_rt WHERE views = ? AND user_id = ?", 1, 7)
     end
 
-    it "accepts float bind parameters" do
+    xit "accepts float bind parameters" do
       conn.query("SELECT * FROM posts_rt WHERE views = ? AND user_id = ?", 1.2, 7.2)
     end
 
-    it "accepts decimal bind parameters" do
+    xit "accepts decimal bind parameters" do
       require "bigdecimal"
       conn.query("SELECT * FROM posts_rt WHERE views = ? AND user_id = ?", BigDecimal("1.2"), BigDecimal("7.2"))
     end
@@ -82,11 +82,11 @@ describe Oedipus::Connection do
       conn.multi_query("SELECT * FROM posts_rt WHERE views = ? AND user_id = ?", 1, 7)
     end
 
-    it "accepts float bind parameters" do
+    xit "accepts float bind parameters" do
       conn.multi_query("SELECT * FROM posts_rt WHERE views = ? AND user_id = ?", 1.2, 7.2)
     end
 
-    it "accepts decimal bind parameters" do
+    xit "accepts decimal bind parameters" do
       require "bigdecimal"
       conn.multi_query("SELECT * FROM posts_rt WHERE views = ? AND user_id = ?", BigDecimal("1.2"), BigDecimal("7.2"))
     end
