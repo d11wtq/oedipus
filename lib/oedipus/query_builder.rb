@@ -139,7 +139,7 @@ module Oedipus
           "VALUES",
           "(#{value_substitute_str})"
         ].join(" "),
-        *attributes.values
+        *attributes.values.flatten
       ]
     end
 
