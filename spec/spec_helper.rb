@@ -9,6 +9,7 @@
 
 require "bundler/setup"
 
+require "pry"
 require "rspec"
 require "oedipus"
 

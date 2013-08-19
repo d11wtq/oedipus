@@ -124,19 +124,22 @@ module Oedipus
     end
 
     def into(type, id, attributes)
-      attrs, values = attributes.inject([[:id], [id]]) do |(a, b), (k, v)|
-        [a.push(k), b.push(v)]
-      end
+      attributes.merge!(id: id)
+
+      value_substitute_str = attributes.values.collect do |attribute|
+        attribute.is_a?(Array) ? "(#{(['?'] * attribute.size).join(', ')})" : '?'
+      end.join(', ')
+
 
       [
         [
           type,
           "INTO #{@index_name}",
-          "(#{attrs.join(', ')})",
+          "(#{attributes.keys.join(', ')})",
           "VALUES",
-          "(#{(['?'] * attrs.size).join(', ')})"
+          "(#{value_substitute_str})"
         ].join(" "),
-        *values
+        *attributes.values
       ]
     end
 

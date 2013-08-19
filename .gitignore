@@ -1,5 +1,5 @@
 *.gem
-.bundle
+*.bundle
 Gemfile.lock
 pkg/*
 spec/data/index/*
@@ -8,3 +8,5 @@ spec/data/searchd.*
 spec/data/sphinx.*
 lib/oedipus/oedipus.so
 tmp/
+*.un~
+*.swp

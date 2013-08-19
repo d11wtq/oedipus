@@ -173,7 +173,7 @@ describe Oedipus::QueryBuilder do
 
   describe "#insert" do
     it "includes the ID and the attributes" do
-      builder.insert(3, title: "example", views: 9).should == ["INSERT INTO posts (id, title, views) VALUES (?, ?, ?)", 3, "example", 9]
+      builder.insert(3, title: "example", views: 9).should == ["INSERT INTO posts (title, views, id) VALUES (?, ?, ?)", "example", 9, 3]
     end
   end
 
@@ -193,7 +193,7 @@ describe Oedipus::QueryBuilder do
 
   describe "#replace" do
     it "includes the ID and the attributes" do
-      builder.replace(3, title: "example", views: 9).should == ["REPLACE INTO posts (id, title, views) VALUES (?, ?, ?)", 3, "example", 9]
+      builder.replace(3, title: "example", views: 9).should == ["REPLACE INTO posts (title, views, id) VALUES (?, ?, ?)", "example", 9, 3]
     end
   end
 
