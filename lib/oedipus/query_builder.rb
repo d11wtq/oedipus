@@ -130,7 +130,6 @@ module Oedipus
         attribute.is_a?(Array) ? "(#{(['?'] * attribute.size).join(', ')})" : '?'
       end.join(', ')
 
-
       [
         [
           type,
@@ -144,11 +143,10 @@ module Oedipus
     end
 
     def conditions(query, filters)
-      str_conditions = filters.delete(:conditions)
       sql = []
       sql << ["MATCH(?)", query] unless query.empty?
+      sql.push(filters.delet(:conditions)) if filters.has_key?(:conditions)
       sql.push(*attribute_conditions(filters))
-      sql.push(str_conditions)
 
       exprs, bind_values = sql.inject([[], []]) do |(strs, values), v|
         [strs.push(v.shift), values.push(*v)]
