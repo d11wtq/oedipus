@@ -173,6 +173,9 @@ module Oedipus
     # @option [Fixnum] offset
     #   an offset to apply, defaults to 0
     #
+    # @option [Array] conditions
+    #   an array of a SQL WHERE conditions and the values to be escaped  
+    #
     # @option [Object] everything_else
     #   all additional options are taken to be attribute filters
     #

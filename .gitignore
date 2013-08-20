@@ -10,3 +10,4 @@ lib/oedipus/oedipus.so
 tmp/
 *.un~
 *.swp
+*.swo
