@@ -176,6 +176,9 @@ module Oedipus
     # @option [Array] conditions
     #   an array of a SQL WHERE conditions and the values to be escaped  
     #
+    # @option [Hash] options
+    #   a hash of options to apply to the query
+    #
     # @option [Object] everything_else
     #   all additional options are taken to be attribute filters
     #

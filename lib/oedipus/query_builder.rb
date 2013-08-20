@@ -35,7 +35,8 @@ module Oedipus
           from(filters),
           where,
           order_by(filters),
-          limits(filters)
+          limits(filters),
+          options(filters)
         ].join(" "),
         *bind_values
       ]
@@ -104,7 +105,7 @@ module Oedipus
 
     private
 
-    RESERVED = [:attrs, :limit, :offset, :order]
+    RESERVED = [:attrs, :limit, :offset, :order, :options]
 
     def fields(filters)
       filters.fetch(:attrs, [:*]).dup.tap do |fields|
@@ -183,6 +184,16 @@ module Oedipus
 
     def limits(filters)
       "LIMIT #{filters[:offset].to_i}, #{filters[:limit].to_i}" if filters.key?(:limit)
+    end
+
+    def options(filters)
+      if filters.key?(:options)
+        option_strs = filters[:options].map do |k, v| 
+          "#{k} = #{v}" 
+        end
+
+        "OPTION #{option_strs.join(', ')}"
+      end
     end
   end
 end
