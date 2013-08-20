@@ -145,7 +145,7 @@ module Oedipus
     def conditions(query, filters)
       sql = []
       sql << ["MATCH(?)", query] unless query.empty?
-      sql.push(filters.delet(:conditions)) if filters.has_key?(:conditions)
+      sql.push(filters.delete(:conditions)) if filters.has_key?(:conditions)
       sql.push(*attribute_conditions(filters))
 
       exprs, bind_values = sql.inject([[], []]) do |(strs, values), v|
