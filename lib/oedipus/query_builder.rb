@@ -34,6 +34,7 @@ module Oedipus
         [
           from(filters),
           where,
+          group_by(filters),
           order_by(filters),
           limits(filters),
           options(filters)
@@ -105,7 +106,7 @@ module Oedipus
 
     private
 
-    RESERVED = [:attrs, :limit, :offset, :order, :options]
+    RESERVED = [:attrs, :limit, :offset, :order, :options, :group]
 
     def fields(filters)
       filters.fetch(:attrs, [:*]).dup.tap do |fields|
@@ -194,6 +195,10 @@ module Oedipus
 
         "OPTION #{option_strs.join(', ')}"
       end
+    end
+
+    def group_by(filters)
+      "GROUP BY #{filters[:group]}" if filters.key?(:group)
     end
   end
 end
