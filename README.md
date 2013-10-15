@@ -22,7 +22,9 @@ Oedipus does not (yet) provide wrappers for indexing that data via ruby [1].
 ## Dependencies
 
   * ruby >= 1.9
-  * sphinx >= 2.0.2
+  * sphinx >= 2.0.2  
+    **OSX NOTE** make sure you've included `--mysql` flag into `brew install`
+    command, even if you plan to use it with PostgreSQL.
   * mysql dev libs >= 4.1
 
 ## Installation
